@@ -1,129 +1,482 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="用一次订单告警理解 DeepSeek Harness 的 Agent Loop、会话事件和工具编排。"><title>读懂 Agent Loop · DeepSeek Harness</title><style>:root{--paper:#f8f7f1;--ink:#182b29;--muted:#52615c;--line:#c3cbc1;--accent:#a24223;--light:#e9ede5;--dark:#1c2b2b;--mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.75 "Inter","PingFang SC","Microsoft Yahei",sans-serif}a{color:inherit;text-underline-offset:4px}a:hover{color:var(--accent)}button,input,summary{cursor:pointer}button{font:inherit}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,pre:focus-visible{outline:3px solid #ce693d;outline-offset:3px}.wrap{max-width:1248px;margin:auto;padding:0 clamp(18px,5vw,76px)}.mast,.mast span,.screenhead,.monitor figcaption,.cap,.runbar{display:flex;align-items:center}.mast{height:70px;justify-content:space-between;border-bottom:1px solid var(--ink);font-weight:650}.mast span{gap:12px;letter-spacing:-.03em}.mast a{font-size:13px;text-decoration:none;letter-spacing:.03em}.logo{color:var(--paper);background:var(--ink);border-radius:3px;width:29px;height:29px;display:grid;place-items:center;font:700 25px/1 var(--mono)}.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:7%;align-items:center;padding:clamp(32px,5vw,76px) 0 42px}.kicker,.sectionhead>span,.steptabs small,.screenhead span,.monitor figcaption,.cap,.pair small,.question small,nav small,.journal small{font:600 12px/1.5 var(--mono);letter-spacing:.065em}.kicker,.sectionhead>span,nav small,.pair small{color:var(--accent)}h1{font-size:clamp(48px,6.3vw,86px);line-height:1.07;letter-spacing:-.07em;margin:18px 0 16px}h1 em{font-family:"Baskervville",Georgia,serif;font-weight:500;letter-spacing:-.065em}.hero p{max-width:36em;margin:0;color:var(--muted)}figure{margin:0}.monitor{background:var(--dark);color:#f6f6e8;border:1px solid #182425;border-radius:8px;padding:20px 20px 12px;box-shadow:6px 6px 0 #dee1d6}.screenhead{justify-content:space-between;margin-bottom:16px}.screenhead strong{font:600 19px var(--mono)}.screenhead span,.monitor figcaption{color:#c3cfc8}.monitor svg{width:100%;display:block}.monitor figcaption{border-top:1px solid #485653;margin-top:8px;padding-top:12px;font-size:11px}.monitor figcaption span:last-child{margin-left:auto}.dot{height:7px;width:7px;border-radius:50%;background:#ffa16f;margin-right:8px}nav{display:flex;flex-wrap:wrap;border-block:1px solid var(--line);gap:8px 24px;padding:14px 0}nav a{text-decoration:none;font-size:14px;font-weight:600}nav small{margin-right:6px;font-size:10px}.chapters{max-width:920px;margin:auto}section,footer{padding:50px 0 35px;border-bottom:1px solid var(--line)}.sectionhead{display:flex;gap:18px;align-items:baseline;margin-bottom:24px}.sectionhead>span{font-size:15px;flex:none}.sectionhead p{margin:10px 0 0;color:var(--muted)}h2{font-size:clamp(25px,3.3vw,39px);line-height:1.3;letter-spacing:-.045em;margin:0;font-weight:730}h3{font-size:21px;line-height:1.5;margin:27px 0 8px;letter-spacing:-.03em}p{margin:12px 0}small{color:var(--muted)}code,pre{font-family:var(--mono)}:not(pre)>code{font-size:.86em;overflow-wrap:anywhere}.question{padding:15px 19px;background:var(--light);border-left:3px solid #607a65;margin-bottom:18px}.question small,.journal small,.pair small{display:block;margin-bottom:6px}.steptabs{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}.steptabs button{background:#e6e8e0;text-align:left;padding:12px 17px;border:none;border-radius:3px;font-weight:650;color:var(--ink)}.steptabs small{display:block;font-size:10px;color:inherit}.steptabs button[aria-pressed=true]{background:var(--ink);color:white}.stepdetail,.turn{border:1px solid var(--line);padding:18px 20px}.stepdetail{margin-top:8px;background:#fcfcf7;min-height:172px}.stepdetail>div{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}.stepdetail code{color:var(--accent)}.stepdetail p:last-child{color:var(--muted);margin-bottom:0}.nest{padding:22px;background:#e9ede6;border:1px solid #a4b5a8;border-radius:4px}.nestlabel{font-family:var(--mono);font-weight:700;margin-bottom:14px}.nestlabel span{font:500 15px/1.6 sans-serif;margin-left:12px}.turn{margin:8px 0;background:#f7f8f1;padding:12px 16px}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chips i{font:500 14px/1.45 sans-serif;background:#e1e9df;padding:5px 12px}.nest figcaption,.return,.calc p,.runbar small{color:var(--muted);font-size:14px}.nest figcaption{margin:12px 0 0}dl{display:grid;grid-template-columns:minmax(155px,1fr) 3fr;gap:0;margin:18px 0 0}dt,dd{border-bottom:1px solid #d6dbd2;margin:0;padding:13px 4px}dt{font-weight:700}.flow{display:flex;align-items:center;justify-content:space-between;gap:10px}.flow span{background:var(--ink);color:white;padding:12px 6px;flex:1;text-align:center;border-radius:3px}.flow b{color:var(--accent)}.return{border-bottom:1px dashed #a6b3a5;padding:10px 0}table{border-collapse:collapse;width:100%;margin:18px 0}th,td{border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}thead th{font-size:14px;color:var(--muted)}tbody th{width:29%;color:#235b50}.code{color:#e3e9de;background:var(--dark);border-radius:5px;overflow:hidden;margin:16px 0}.cap{color:#a9cdc1;border-bottom:1px solid #475650;padding:9px 16px;font-size:12px}.code pre,#result{margin:0;padding:17px 20px;overflow:auto;line-height:1.65;font-size:14px;tab-size:2}.runbar{gap:14px}.runbar button{background:var(--ink);color:white;border:none;border-radius:4px;padding:8px 16px}.runbar button:hover{background:#285247}#result{margin-top:12px;background:var(--light);white-space:pre-wrap}.journal,.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}.journal{background:var(--light);padding:20px}.journal>div{padding:4px 12px}.journal>div+div{border-left:1px solid #a9b5a7}.journal code{color:#265e51}.journal p{margin:2px 0 8px}.pair article{background:#edede4;padding:22px;border-top:3px solid #718475}.pair article+article{background:#f2eae0;border-color:#b1633d}.pair h3,.take h3{margin:0}.pair p{margin-bottom:0}.calc{margin:20px 0;border:1px solid var(--line);padding:20px}.calc label{font-weight:650}.calc output{margin-left:8px;color:var(--accent)}input[type=range]{display:block;width:100%;accent-color:var(--accent);margin:14px 0 18px}.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.counts div{border-left:2px solid var(--line);padding-left:10px}.counts b,.counts span{display:block}.counts b{font:500 34px/1.1 Georgia,serif}.counts span{font-size:14px}.calc p{margin-bottom:0}details{margin-top:18px;border:1px solid var(--line);padding:14px 18px}summary{font-weight:650}.take{border-left:4px solid var(--accent);padding:8px 18px;margin:25px 0;background:#f1eee4}.take p{margin:6px 0}footer{border:0;padding-bottom:65px}footer h2{font-size:25px}footer p{color:var(--muted);font-size:15px}footer a{display:inline-block;margin:0 20px 8px 0;font-size:14px}
-@media(max-width:760px){body{font-size:16px}.hero{grid-template-columns:1fr;gap:24px;padding:28px 0}.hero h1 br{display:none}.hero h1 em{margin-left:.16em}.hero h1{font-size:clamp(40px,8vw,60px)}.monitor{max-width:520px;width:100%;padding:15px}.mast{height:54px}nav{gap:6px 16px}.sectionhead{gap:11px}section{padding:34px 0 26px}.pair{grid-template-columns:1fr}.steptabs button{padding:9px 6px;font-size:14px}.steptabs small{font-size:9px}.nest{padding:14px}.nestlabel span{display:block;margin:3px 0}.flow{gap:3px;font-size:13px}.flow span{padding:8px 2px}.return{font-size:13px}dl{grid-template-columns:1fr}dt{border:0;padding-bottom:0}dd{padding-top:2px}.journal{grid-template-columns:.9fr 1.1fr;gap:0;padding:12px 2px}.journal p{font-size:14px}td,th{padding:9px 5px}.code pre{font-size:13px;padding:14px}.calc{padding:14px}.counts{gap:4px}.counts span{font-size:12px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media print{body{font-size:10pt;background:white}.wrap{padding:0}.mast,.steptabs,.runbar,nav,.calc input{display:none}.hero{padding:12px 0;grid-template-columns:1fr 1fr}.hero h1{font-size:34pt}.hero br{display:none}section{padding:16px 0}.sectionhead{margin-bottom:10px}h2{font-size:20pt}.stepdetail[hidden]{display:block}.stepdetail{min-height:auto}.code pre{white-space:pre-wrap;font-size:9pt}.pair,.journal,.monitor,.code,.turn{break-inside:avoid}*{print-color-adjust:exact}}
-</style></head><body><div class="wrap"><header class="mast"><span><b class="logo">↳</b> DeepSeek Harness</span><a href="#sources">源码索引 ↗</a></header><main><div class="hero"><div><div class="kicker">运行机制 / 第五节</div><h1>读懂<br><em>Agent Loop</em></h1><p>从一条订单告警出发，看模型怎样取得证据，工具怎样返回结果，以及一次调查如何留下可恢复的记录。</p></div><figure class="monitor"><div class="screenhead"><strong>order-api</strong><span>HTTP 500 比例</span></div>
-<svg viewBox="0 0 480 200" role="img" aria-labelledby="charttitle"><title id="charttitle">模拟订单接口错误率曲线。19:56 发布，20:00 后从约 0.2% 上升到约 7%。</title>
-<g stroke="#3d4a4c" stroke-width="1"><path d="M38 37H461 M38 98H461 M38 159H461" fill="none"/></g>
-<g fill="#b8c5c2" font-size="12" font-family="monospace"><text x="4" y="41">8%</text><text x="4" y="102">4%</text><text x="4" y="163">0%</text><text x="36" y="189">19:50</text><text x="233" y="189">20:00</text><text x="425" y="189">20:10</text></g>
-<path d="M166 35 V160" stroke="#b9c8c2" stroke-dasharray="3 5"/><text x="105" y="23" fill="#d2ddd6" font-size="12">19:56 · 配置发布</text>
-<path d="M38 156L67 156 76 154 90 157 112 155 125 157 149 155 165 157 191 155 216 155 236 154 248 153 257 139 268 142 281 112 292 120 309 82 324 94 337 66 350 72 361 53 375 69 387 51 403 59 418 43 428 55 443 48 458 52L458 159H38Z" fill="#f99164" opacity=".10"/>
-<path d="M38 156L67 156 76 154 90 157 112 155 125 157 149 155 165 157 191 155 216 155 236 154 248 153 257 139 268 142 281 112 292 120 309 82 324 94 337 66 350 72 361 53 375 69 387 51 403 59 418 43 428 55 443 48 458 52" fill="none" stroke="#ffa16f" stroke-width="3" stroke-linejoin="round"/><circle cx="458" cy="52" r="5" fill="#ffad79"/></svg><figcaption><span class="dot"></span> 教学模拟数据 <span>19:50 — 20:10</span></figcaption></figure></div><nav aria-label="讲义目录"><a href="#trace"><small>01</small>调查现场</a><a href="#units"><small>02</small>三个尺度</a><a href="#runtime"><small>03</small>运行机制</a><a href="#history"><small>04</small>会话恢复</a><a href="#ptc"><small>05</small>工具编排</a><a href="#hooks"><small>06</small>扩展插件</a></nav><div class="chapters"><section id="trace"><header class="sectionhead"><span>01</span><div><h2>跟着一次告警走完循环</h2><p>从一个可回答的问题开始：20:00 后的订单失败，与哪项变化最相关？每次模型决策都以当时已经取得的证据为输入。</p></div></header><div class="question"><small>用户输入</small>「订单服务的 500 错误突然增多，帮我调查原因。」</div><div class="steptabs" aria-label="调查步骤"><button data-step="0" aria-pressed="true"><small>STEP 01</small>查指标</button><button data-step="1" aria-pressed="false"><small>STEP 02</small>读日志</button><button data-step="2" aria-pressed="false"><small>STEP 03</small>核对部署</button><button data-step="3" aria-pressed="false"><small>STEP 04</small>写结论</button></div><div aria-live="polite"><article class="stepdetail" id="step0"><div><b>先确定故障范围</b><code>query_metrics</code></div><p>订单接口的 HTTP 500 比例从 0.2% 升到约 7%，集中在 20:00 之后。</p><p><strong>判断依据</strong>　错误比例只说明用户受影响。下一步查同一时段的失败日志。</p></article><article class="stepdetail" id="step1"><div><b>寻找失败请求的共同点</b><code>query_logs</code></div><p>多条 500 日志都出现“等待数据库连接超时”。</p><p><strong>判断依据</strong>　等待连接可能由流量突增、慢查询或连接池变小引起。下一步检查最近的变更。</p></article><article class="stepdetail" id="step2"><div><b>把变化放回时间线上</b><code>get_deployments</code></div><p>19:56 发布的新配置把连接池上限从 50 降到了 10。</p><p><strong>判断依据</strong>　配置变更先于错误增长。还需要连接占用率和请求流量来验证因果关系。</p></article><article class="stepdetail" id="step3"><div><b>区分事实与待验证的假设</b><code>final response</code></div><p>首要假设是连接池上限降低，导致请求排队超时。记录支持证据，并列出仍需核验的指标。</p><p><strong>判断依据</strong>　本步没有工具调用，队列也没有待处理输入，本轮调查结束。用户追问会开启新的 Turn。</p></article></div><p>在这个例子里，模型作出四次决策，工具执行三次。最后一步只生成文字结论，也算一个 Step。</p></section><section id="units"><header class="sectionhead"><span>02</span><div><h2>Session、Turn、Step 怎么数？</h2><p>同一段调查可以从三个尺度观察。先确定统计对象，才知道耗时、失败率和模型用量该记在哪里。</p></div></header><figure class="nest"><div class="nestlabel">Session <span>订单服务故障调查 · 保留跨轮历史</span></div><div class="turn"><b>Turn 1</b>　调查本次告警<div class="chips"><i>查指标</i><i>读日志</i><i>核对部署</i><i>写结论</i></div></div><div class="turn"><b>Turn 2</b>　用户追问「当时流量也涨了吗？」<div class="chips"><i>查流量</i><i>补充结论</i></div></div><figcaption>每个浅色方块代表一个 Step。第二轮可以使用第一轮已经记录的证据。</figcaption></figure>
-<dl><dt>Session · 会话</dt><dd>把多轮交互关联到同一份历史。用它还原整次调查，并汇总跨轮用量。</dd><dt>Turn · 一轮处理</dt><dd>驱动器领取待处理输入后开展的一轮工作。适合衡量用户从提问到答复等了多久。若进入首个 Step 前输入被拒，本轮可以有零个 Step。</dd><dt>Step · 一次决策</dt><dd>覆盖一次模型决策及其引发的一批工具调用，也可能没有工具。失败的模型请求可以在同一 Step 内重试，所以精确的请求次数要看请求记录。</dd></dl></section><section id="runtime"><header class="sectionhead"><span>03</span><div><h2>谁负责推动下一步？</h2><p>在 DeepSeek Harness（DSH）里，模型提出下一步动作，宿主运行时负责执行、记录和收尾。</p></div></header><div class="flow"><span>组装上下文</span><b>→</b><span>请求模型</span><b>→</b><span>执行工具</span><b>→</b><span>追加结果</span></div><div class="return">↳ 带着更新后的历史进入下一步；无工具调用且无待处理工作时结束本轮。</div><table><thead><tr><th>服务</th><th>职责与作用</th></tr></thead><tbody><tr><th scope="row"><code>ctx.agents</code></th><td><b>创建或恢复 Agent</b><br>让后续追问回到已有的调查。</td></tr><tr><th scope="row"><code>ctx.agentLoop</code></th><td><b>驱动 Turn 与 Step</b><br>决定何时请求模型、执行工具、继续或收尾。</td></tr><tr><th scope="row"><code>ctx.systemPrompt</code></th><td><b>组装系统指令</b><br>结合当前可见工具与提示词，告诉模型有哪些能力可用。</td></tr><tr><th scope="row"><code>ctx.llm</code></th><td><b>与模型提供方通信</b><br>发送派生的消息历史，处理流式文本和工具调用。</td></tr><tr><th scope="row"><code>ctx.tools</code></th><td><b>解析、校验与执行工具</b><br>把调用交给执行器，应用权限策略，返回相关联的结果。</td></tr><tr><th scope="row"><code>ctx.sessions</code></th><td><b>维护会话与事件</b><br>保存输入、响应和工具结果，供下一步派生历史。</td></tr></tbody></table><h3>把循环缩到一个可以运行的例子</h3><p>下面的 JavaScript 同时模拟模型和三个只读工具。注意 <code>history.push</code> 的两处写入：先保存模型的决定，再用调用 ID 关联工具结果。真实模型会读取结果内容，自行决定下一步。</p><div class="code"><div class="cap">JavaScript · 离线教学模型</div><pre tabindex="0"><code>const evidence = {
-  query_metrics: &quot;20:00 后订单接口的 500 比例升高&quot;,
-  query_logs: &quot;失败请求多次等待数据库连接超时&quot;,
-  get_deployments: &quot;19:56 发布，连接池上限从 50 改为 10&quot;
-};
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DeepSeek Harness 中文图解课程：运行环境、Cordis、工具开发、配置分发、Agent Loop 与 RCA 实战。"><title>图解 DeepSeek Harness · 从运行到插件开发</title><style>:root{--paper:#f7f8f5;--ink:#172c35;--muted:#475e67;--line:#c8d0ce;--blue:#124e65;--orange:#a44927;--mint:#daeee4;--mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace}*{box-sizing:border-box}html{scroll-padding-top:22px}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.82 Inter,"PingFang SC","Microsoft YaHei",sans-serif}.wrap{max-width:1410px;padding:0 clamp(18px,5.6vw,86px);margin:auto}.mast,.mast a,.arch-row,.kernel,.labhead,.codehead,.slider,.chapter-no,.eyebrow{display:flex;align-items:center}.mast{height:68px;border-bottom:1px solid var(--ink);justify-content:space-between}.mast a{gap:10px;text-decoration:none;font-weight:700;letter-spacing:-.02em}.mast a:last-child{font-size:13px;color:var(--muted)}a{color:var(--blue);text-underline-offset:4px}a:hover{color:var(--orange)}.mark{width:29px;height:29px;display:grid;place-items:center;background:var(--ink);color:#c3f1d6;border-radius:7px;font:22px/1 var(--mono)}.hero{display:grid;grid-template-columns:1fr minmax(350px,.88fr);align-items:center;gap:7%;padding:50px 0 38px}.eyebrow,.chapter-no{font:700 12px/1.4 var(--mono);letter-spacing:.12em;color:var(--orange);gap:9px}.eyebrow:before,.chapter-no:before{content:'';display:inline-block;width:24px;height:2px;background:#b05c3b}.hero h1{font-size:clamp(44px,5.5vw,77px);line-height:.99;letter-spacing:-.065em;margin:20px 0 22px}.hero em{font:500 italic 1.06em/1 Georgia,"Baskervville",serif;color:var(--blue);letter-spacing:-.07em}.dek{max-width:29em;color:var(--muted);margin:0}.start{display:inline-flex;gap:20px;align-items:center;background:var(--blue);color:white;padding:8px 14px;margin-top:22px;border-radius:5px;text-decoration:none;font-size:14px}.start:hover{background:var(--ink);color:#fff}.arch{padding:17px 20px 11px;border:1px solid #1e3d48;border-radius:10px;background-color:#162f3a;background-image:radial-gradient(#35505a .8px,transparent .8px);background-size:12px 12px;color:#e3efec;margin:0;box-shadow:5px 5px 0 #d2ddd6}.arch-row,.kernel{justify-content:space-between;background:#213e4a;padding:7px 12px;border:1px solid #5d757a;border-radius:4px;gap:8px}.arch-row small,.kernel small,.arch figcaption{color:#c0d6d3;font-size:11px}.arch-row strong{font-size:14px;font-weight:600}.kernel{background:#c4eacf;color:#133630;border-color:#abd5bb}.kernel div{display:flex;align-items:center;gap:10px}.kernel strong{font:600 24px/1.3 Georgia,serif}.kernel small{color:#345349}.kernel-icon{font-size:20px}.arch-link{width:1px;height:12px;background:#99c9b8;margin:auto}.module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.module-grid span{background:#254753;color:#e6f4ee;border:1px solid #557680;text-align:center;font:13px/1.4 var(--mono);padding:4px 0;border-radius:3px}.arch figcaption{text-align:center;margin-top:7px}.route{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-width:1px 0 0 1px}.route a{position:relative;display:block;padding:13px 16px;border:1px solid var(--line);border-width:0 1px 1px 0;text-decoration:none;color:var(--ink)}.route a:hover{background:#e7efe9}.route small,.lane-label,.arch-row small,.labhead small,.codehead b{font:600 11px/1.5 var(--mono);letter-spacing:.04em}.route small{display:block;color:var(--orange)}.route b{font-size:16px}.route a span{position:absolute;right:13px;top:14px;color:#738884}.reader{display:grid;grid-template-columns:164px minmax(0,920px);gap:clamp(24px,4vw,66px);justify-content:space-between}.reader aside{position:sticky;top:20px;align-self:start;margin-top:44px;font-size:14px}.index-title{font-weight:700}.reader aside a{text-decoration:none}.reader nav{display:grid;border-left:1px solid var(--line);margin:12px 0;padding:2px 0}.reader nav a{padding:8px 10px;color:var(--muted)}.reader nav a:hover,.reader nav [aria-current]{background:var(--mint);color:var(--blue)}nav small{font:11px var(--mono);margin-right:8px}.ref-link{font-size:12px}.mobile-nav{display:none}.opening,.chapter,footer{padding:42px 0 32px;border-bottom:1px solid var(--line)}.chapter header{border-bottom:1px solid var(--line);padding-bottom:14px;margin:0 0 18px}.chapter header p{margin:6px 0 0;color:var(--muted)}h2{font-size:clamp(26px,3vw,40px);line-height:1.28;letter-spacing:-.055em;margin:5px 0 12px}h3{font-size:clamp(20px,2vw,27px);line-height:1.4;letter-spacing:-.035em;margin:32px 0 8px}p{margin:12px 0}b,strong{font-weight:680}.concepts{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:22px 0 0}.concepts div{border-top:3px solid #6e998e;padding:9px 0}.concepts p{color:var(--muted);font-size:15px;margin:3px 0}code,pre{font-family:var(--mono)}:not(pre)>code{font-size:.87em;overflow-wrap:anywhere;color:#17475a}.diagram,.lab{background:#eef2ed;border:1px solid #c4d0c9;border-radius:7px;margin:22px 0;padding:17px 20px}.diagram-title,.labhead{font-weight:700;font-size:16px;margin-bottom:16px}.diagram figcaption{font-size:13px;color:var(--muted);margin-top:14px;line-height:1.6}.chain{display:flex;gap:18px}.node{position:relative;flex:1;min-width:0;display:flex;justify-content:center;flex-direction:column;background:#fffefa;border:1px solid #aabdb5;border-radius:4px;padding:8px 10px;line-height:1.5}.node strong{font-size:15px;overflow-wrap:anywhere}.node span{font-size:12px;color:var(--muted)}.chain>.node:not(:last-child):after{content:'→';position:absolute;right:-18px;top:50%;transform:translateY(-50%);width:17px;text-align:center;color:#377462}.fan{max-width:660px;margin:auto}.fanhead{display:flex;justify-content:center}.fanhead .node{flex:0 1 260px;text-align:center;background:#d7eade}.fanleaves{padding-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:relative}.fanleaves:before{content:'';position:absolute;inset:10px 16.66% auto;height:1px;background:#7b9a8b}.fanleaves .node:before,.fanhead .node:after{content:'';position:absolute;bottom:100%;left:50%;height:10px;width:1px;background:#7b9a8b}.fanhead .node:after{bottom:auto;top:100%}.lane{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:12px;margin:7px 0}.lane-label{color:#28574e}.bundles .node:nth-child(2){background:#d5eadf}.bundles .chain>.node:after{display:none}.bundles .chain{gap:6px}.branch-note,.session-wrap,.split>div{background:#e3ebe4;border:1px solid #b9cabd;border-radius:4px;padding:8px 12px}.branch-note{font-size:13px;margin:10px 0}.branch-note b{color:var(--orange);margin-right:6px}.split,.stats{display:flex;gap:8px;margin:12px 0}.split>div,.stats>div{flex:1}.split b,.split span,.stats b{display:block}.split b{font-size:14px}.split span{font-size:13px}.session-wrap>b{display:block;margin-bottom:9px}.lab{background:#f1f2ec}.labhead{justify-content:space-between}.labhead small{color:var(--muted)}.choices{display:flex;flex-wrap:wrap;gap:6px}button{cursor:pointer}.choices button{border:1px solid #8daca3;background:white;color:var(--ink);padding:7px 12px;border-radius:4px;font:600 14px/1.5 inherit;font-family:inherit}.choices button[aria-pressed=true]{background:var(--blue);color:#fff;border-color:var(--blue)}.choices button code{color:inherit}.readout{border-left:3px solid #83a993;padding:7px 14px;margin:15px 0 0;background:#fbfcf7}.readout p,.readout ul{font-size:15px;margin:4px 0 9px}.readout ul{padding-left:22px}.stats>div{border-left:2px solid #8da99c;padding-left:10px;font-size:13px}.stats b{font:32px/1.2 Georgia,serif}.slider{gap:15px;font-size:14px}.slider input{flex:1;min-width:0;accent-color:var(--blue)}table{border-collapse:collapse;width:100%;margin:17px 0;font-size:15px}td,th{text-align:left;border-bottom:1px solid var(--line);padding:9px 10px;vertical-align:top}thead{background:#e7ece5}td:first-child{width:28%;font-weight:650}.codebox{margin:16px 0;border-radius:6px;overflow:hidden;background:#0d1117;color:#e6edf3}.codehead{justify-content:space-between;gap:12px;padding:8px 15px;border-bottom:1px solid #354751;font-size:12px;color:#c4d8d8}.codehead b{color:#94d6bb}.codebox pre{margin:0;padding:14px 17px;overflow:auto;font-size:14px;line-height:1.65;tab-size:2}details{border:1px solid var(--line);border-radius:4px;margin:14px 0;padding:10px 15px}summary{cursor:pointer;color:var(--blue);font-weight:650}footer{border-bottom:0;padding-bottom:70px}footer p{font-size:15px;color:var(--muted)}.refs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:15px 0 22px}.refs a,footer>a{font-size:14px}.skip{position:absolute;top:-100px}.skip:focus{top:3px;background:white;z-index:5}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,pre:focus-visible{outline:3px solid #c5693b;outline-offset:2px}
+@media(max-width:920px){.reader{grid-template-columns:132px minmax(0,1fr);gap:24px}.concepts{grid-template-columns:1fr;gap:2px}.hero{gap:4%}.chain{gap:14px}.chain>.node:not(:last-child):after{width:13px;right:-14px}.node{padding:7px}.lane{grid-template-columns:76px 1fr}}
+@media(max-width:740px){html{scroll-padding-top:52px}body{font-size:16px}.wrap{padding:0 16px}.mast{height:49px}.hero{grid-template-columns:1fr;gap:22px;padding:26px 0 23px}.hero br{display:none}.hero em{word-spacing:.01em}.hero em br:after{content:' '}.hero h1{max-width:9em;line-height:1.06;font-size:clamp(44px,10vw,62px);margin:13px 0}.hero h1 em{line-height:1.05}.arch{max-width:510px;width:100%;padding:12px}.route{grid-template-columns:repeat(2,1fr)}.route a{padding:9px}.route b{font-size:14px}.route a span{right:6px;top:6px}.reader{display:block}.reader aside{display:none}.mobile-nav{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;background:#f7f8f5f5;border-bottom:1px solid #c4cec4;padding:7px 0;font-size:13px}.mobile-nav select{font:600 14px/1.5 inherit;font-family:inherit;border:1px solid #abbbb2;background:#f8faf5;border-radius:3px;padding:4px 8px;color:var(--ink)}.opening,.chapter,footer{padding:30px 0 24px}.diagram,.lab{padding:13px}.chain{flex-direction:column;gap:14px}.node{padding:6px 10px}.chain>.node:not(:last-child):after{content:'↓';bottom:-16px;top:auto;right:auto;left:18px;transform:none;font-size:14px;line-height:16px}.lane{grid-template-columns:1fr;gap:3px}.lane+.lane{margin-top:14px}.lane .chain{flex-direction:row}.lane .chain>.node{padding:5px}.lane .chain>.node:not(:last-child):after{content:'→';right:-14px;left:auto;top:50%;bottom:auto;transform:translateY(-50%)}.node strong{font-size:13px}.node span{font-size:11px}.fanleaves{gap:4px}.fanleaves .node{padding:5px}.session-wrap{padding:7px}.session-wrap .chain{gap:9px}.session-wrap .chain>.node:not(:last-child):after{right:-10px;width:10px;font-size:10px}.codebox pre{font-size:12.5px;padding:11px}.codehead{padding:6px 10px}td,th{padding:6px;font-size:14px}.refs{grid-template-columns:1fr 1fr}.split{flex-wrap:wrap}.slider{gap:6px}.concepts p{font-size:14px}.session-wrap .node span{font-size:10px}}
+@media print{html{scroll-padding:0}.wrap{padding:0}body{font-size:10.5pt}.reader{display:block}.mast,.start,.route,.mobile-nav,.reader aside,.choices,.slider input,.skip{display:none}.chapter{break-before:page}.hero{padding:12px 0}.diagram,.codebox,.lab{break-inside:avoid}.codebox pre{white-space:pre-wrap;font-size:8pt}.arch,.codebox,.hl,.node,*{print-color-adjust:exact}.opening,.chapter,footer{padding:12px 0}a{color:inherit}.refs{grid-template-columns:repeat(3,1fr)}}
 
-// 用固定决策代替模型，离线复现四个 Step。
-function decide(history) {
-  const calls = Object.keys(evidence);
-  const seen = history.filter(m =&gt; m.role === &quot;tool&quot;);
-  const name = calls[seen.length];
-  if (name) return { id: &quot;call-&quot; + name, name };
-  return { text: &quot;候选原因是连接池上限降低；还需核对连接占用与流量。&quot; };
-}
+pre { line-height: 125%; }
+td.linenos .normal { color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px; }
+span.linenos { color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px; }
+td.linenos .special { color: #e6edf3; background-color: #6e7681; padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: #e6edf3; background-color: #6e7681; padding-left: 5px; padding-right: 5px; }
+.hl .hll { background-color: #6e7681 }
+.hl { background: #0d1117; color: #E6EDF3 }
+.hl .c { color: #8B949E; font-style: italic } /* Comment */
+.hl .err { color: #F85149 } /* Error */
+.hl .esc { color: #E6EDF3 } /* Escape */
+.hl .g { color: #E6EDF3 } /* Generic */
+.hl .k { color: #FF7B72 } /* Keyword */
+.hl .l { color: #A5D6FF } /* Literal */
+.hl .n { color: #E6EDF3 } /* Name */
+.hl .o { color: #FF7B72; font-weight: bold } /* Operator */
+.hl .x { color: #E6EDF3 } /* Other */
+.hl .p { color: #E6EDF3 } /* Punctuation */
+.hl .ch { color: #8B949E; font-style: italic } /* Comment.Hashbang */
+.hl .cm { color: #8B949E; font-style: italic } /* Comment.Multiline */
+.hl .cp { color: #8B949E; font-weight: bold; font-style: italic } /* Comment.Preproc */
+.hl .cpf { color: #8B949E; font-style: italic } /* Comment.PreprocFile */
+.hl .c1 { color: #8B949E; font-style: italic } /* Comment.Single */
+.hl .cs { color: #8B949E; font-weight: bold; font-style: italic } /* Comment.Special */
+.hl .gd { color: #FFA198; background-color: #490202 } /* Generic.Deleted */
+.hl .ge { color: #E6EDF3; font-style: italic } /* Generic.Emph */
+.hl .ges { color: #E6EDF3; font-weight: bold; font-style: italic } /* Generic.EmphStrong */
+.hl .gr { color: #FFA198 } /* Generic.Error */
+.hl .gh { color: #79C0FF; font-weight: bold } /* Generic.Heading */
+.hl .gi { color: #56D364; background-color: #0F5323 } /* Generic.Inserted */
+.hl .go { color: #8B949E } /* Generic.Output */
+.hl .gp { color: #8B949E } /* Generic.Prompt */
+.hl .gs { color: #E6EDF3; font-weight: bold } /* Generic.Strong */
+.hl .gu { color: #79C0FF } /* Generic.Subheading */
+.hl .gt { color: #FF7B72 } /* Generic.Traceback */
+.hl .g-Underline { color: #E6EDF3; text-decoration: underline } /* Generic.Underline */
+.hl .kc { color: #79C0FF } /* Keyword.Constant */
+.hl .kd { color: #FF7B72 } /* Keyword.Declaration */
+.hl .kn { color: #FF7B72 } /* Keyword.Namespace */
+.hl .kp { color: #79C0FF } /* Keyword.Pseudo */
+.hl .kr { color: #FF7B72 } /* Keyword.Reserved */
+.hl .kt { color: #FF7B72 } /* Keyword.Type */
+.hl .ld { color: #79C0FF } /* Literal.Date */
+.hl .m { color: #A5D6FF } /* Literal.Number */
+.hl .s { color: #A5D6FF } /* Literal.String */
+.hl .na { color: #E6EDF3 } /* Name.Attribute */
+.hl .nb { color: #E6EDF3 } /* Name.Builtin */
+.hl .nc { color: #F0883E; font-weight: bold } /* Name.Class */
+.hl .no { color: #79C0FF; font-weight: bold } /* Name.Constant */
+.hl .nd { color: #D2A8FF; font-weight: bold } /* Name.Decorator */
+.hl .ni { color: #FFA657 } /* Name.Entity */
+.hl .ne { color: #F0883E; font-weight: bold } /* Name.Exception */
+.hl .nf { color: #D2A8FF; font-weight: bold } /* Name.Function */
+.hl .nl { color: #79C0FF; font-weight: bold } /* Name.Label */
+.hl .nn { color: #FF7B72 } /* Name.Namespace */
+.hl .nx { color: #E6EDF3 } /* Name.Other */
+.hl .py { color: #79C0FF } /* Name.Property */
+.hl .nt { color: #7EE787 } /* Name.Tag */
+.hl .nv { color: #79C0FF } /* Name.Variable */
+.hl .ow { color: #FF7B72; font-weight: bold } /* Operator.Word */
+.hl .pm { color: #E6EDF3 } /* Punctuation.Marker */
+.hl .w { color: #6E7681 } /* Text.Whitespace */
+.hl .mb { color: #A5D6FF } /* Literal.Number.Bin */
+.hl .mf { color: #A5D6FF } /* Literal.Number.Float */
+.hl .mh { color: #A5D6FF } /* Literal.Number.Hex */
+.hl .mi { color: #A5D6FF } /* Literal.Number.Integer */
+.hl .mo { color: #A5D6FF } /* Literal.Number.Oct */
+.hl .sa { color: #79C0FF } /* Literal.String.Affix */
+.hl .sb { color: #A5D6FF } /* Literal.String.Backtick */
+.hl .sc { color: #A5D6FF } /* Literal.String.Char */
+.hl .dl { color: #79C0FF } /* Literal.String.Delimiter */
+.hl .sd { color: #A5D6FF } /* Literal.String.Doc */
+.hl .s2 { color: #A5D6FF } /* Literal.String.Double */
+.hl .se { color: #79C0FF } /* Literal.String.Escape */
+.hl .sh { color: #79C0FF } /* Literal.String.Heredoc */
+.hl .si { color: #A5D6FF } /* Literal.String.Interpol */
+.hl .sx { color: #A5D6FF } /* Literal.String.Other */
+.hl .sr { color: #79C0FF } /* Literal.String.Regex */
+.hl .s1 { color: #A5D6FF } /* Literal.String.Single */
+.hl .ss { color: #A5D6FF } /* Literal.String.Symbol */
+.hl .bp { color: #E6EDF3 } /* Name.Builtin.Pseudo */
+.hl .fm { color: #D2A8FF; font-weight: bold } /* Name.Function.Magic */
+.hl .vc { color: #79C0FF } /* Name.Variable.Class */
+.hl .vg { color: #79C0FF } /* Name.Variable.Global */
+.hl .vi { color: #79C0FF } /* Name.Variable.Instance */
+.hl .vm { color: #79C0FF } /* Name.Variable.Magic */
+.hl .il { color: #A5D6FF } /* Literal.Number.Integer.Long */</style></head><body id="top"><a class="skip" href="#start">跳到第一节</a><div class="wrap"><div class="mast"><a href="#top"><b class="mark">⌘</b> DeepSeek Harness</a><a href="#sources">官方资料 ↗</a></div><main><header class="hero"><div><p class="eyebrow">开发者分享讲义</p><h1>图解 <em>DeepSeek<br> Harness</em></h1><p class="dek">从第一次文件读取，到一个会查告警的 Agent。用六节课拆开 DSH 的插件、工具与运行时。</p><a class="start" href="#start">开始第一节 <span>↓</span></a></div><figure class="arch" aria-label="DSH 总体架构"><div class="arch-row ingress"><small>应用入口</small><strong>Web UI　 /　 CLI　 /　 SDK</strong></div><div class="arch-link"></div><div class="kernel"><div><span class="kernel-icon" aria-hidden="true">⌘</span><strong>Cordis</strong></div><small>插件内核 · 依赖 · 事件 · 生命周期</small></div><div class="arch-link"></div><div class="module-grid"><span>Model</span><span>Agent Loop</span><span>Tools</span><span>Session</span><span>Skills</span><span>Subagents</span><span>Sandbox</span><span>Storage</span><span>UI</span></div><div class="arch-link"></div><div class="arch-row"><small>外部环境</small><strong>文件 / Shell / MCP / Grafana</strong></div><figcaption>逻辑分层图 · 线条表示组合关系</figcaption></figure></header><div class="route"><a href="#start"><small>01 / 运行 DSH</small><b>看见一次真实调用</b><span>↗</span></a><a href="#cordis"><small>02 / Cordis 内核</small><b>理解插件的生与灭</b><span>↗</span></a><a href="#tool"><small>03 / 开发 Tool</small><b>给模型一个接口</b><span>↗</span></a><a href="#compose"><small>04 / 配置与分发</small><b>组合一套运行环境</b><span>↗</span></a><a href="#loop"><small>05 / Agent Loop</small><b>追踪一轮任务</b><span>↗</span></a><a href="#rca"><small>06 / RCA 实战</small><b>用证据解释告警</b><span>↗</span></a></div><label class="mobile-nav"><span>章节</span><select id="chap-select"><option value="top">课程总览</option><option value="start">01 · 运行 DSH</option><option value="cordis">02 · Cordis 内核</option><option value="tool">03 · 开发 Tool</option><option value="compose">04 · 配置与分发</option><option value="loop">05 · Agent Loop</option><option value="rca">06 · RCA 实战</option><option value="sources">官方资料</option></select></label><div class="reader"><aside><a class="index-title" href="#map">系统总览</a><nav aria-label="章节目录"><a href="#start"><small>01</small>运行 DSH</a><a href="#cordis"><small>02</small>Cordis 内核</a><a href="#tool"><small>03</small>开发 Tool</a><a href="#compose"><small>04</small>配置与分发</a><a href="#loop"><small>05</small>Agent Loop</a><a href="#rca"><small>06</small>RCA 实战</a></nav><a class="ref-link" href="#sources">官方资料 ↗</a></aside><div class="article"><section class="opening" id="map"><h2>先看整套系统</h2><p>以一次故障调查为例。模型决定先查哪个现象，Tool 获取告警，Agent Loop 把结果交回模型，Session 保存调查轨迹。Cordis 负责把这些模块组装在一起，因此可以单独更换模型适配器、工具执行器或会话存储。</p><div class="concepts"><div><b>模型与运行时</b><p>模型提出动作；Harness 准备上下文、执行动作并记录结果。Trajectory 用来回看模型当时接触了哪些证据。</p></div><div><b>Tool、Skill 与子 Agent</b><p>Tool 执行具体操作；Skill 提供一类任务的工作说明；Subagent 接受分派的子任务。MCP 让外部服务也能贡献工具。</p></div><div><b>预设与组合</b><p>标准预设提供通用工具，极简预设缩小能力集合，PTC 预设让程序编排工具。创造类预设可再组合创作工具。Profile 选择整个应用的包，Agent 预设进一步限定单个 Agent 的能力。</p></div></div></section><section class="chapter" id="start"><header><div class="chapter-no">第 01 节</div><h2>运行 DSH，观察第一次工具调用</h2><p>用一个空数组问题认识模型、工作区和会话。</p></header><p>DeepSeek Harness（DSH）把模型、工具、提示词和执行历史组装成一个能工作的 Agent。模型提出动作，DSH 找到对应的实现、传入参数，并把结果交回模型。要看清分工，只需要一个有明确答案的小项目。</p>
+<h3>准备一个五分钟能检查完的工作区</h3>
+<p>以下命令用于新建的练习目录。这里故意留了一个边界错误：README 约定空数组返回 0，函数却会算出 <code>0 / 0</code>。</p>
+<div class="codebox"><div class="codehead"><span>终端 · 快速体验</span><b>BASH</b></div><pre tabindex="0"><code class="hl" data-lang="bash">node<span class="w"> </span>-v<span class="w">                    </span><span class="c1"># 此讲义对应的版本要求 Node.js ≥ 24.9</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span>dsh-lab/workspace/src
+<span class="nb">cd</span><span class="w"> </span>dsh-lab/workspace
+<span class="nb">echo</span><span class="w"> </span><span class="s1">'计算平均值；空数组返回 0。'</span><span class="w"> </span>&gt;<span class="w"> </span>README.md
+cat<span class="w"> </span>&gt;<span class="w"> </span>src/average.ts<span class="w"> </span><span class="s">&lt;&lt;'TS'</span>
+<span class="s">export function average(values: number[]) {</span>
+<span class="s">  return values.reduce((sum, n) =&gt; sum + n, 0) / values.length</span>
+<span class="s">}</span>
+<span class="s">TS</span>
+npx<span class="w"> </span>@deepseek-ai/dsh<span class="w"> </span>web</code></pre></div><p>默认地址是 <code>http://127.0.0.1:3080</code>。保持终端运行，在 Web UI 的 <strong>Settings → Models</strong> 配置模型提供方和凭据，选择上一步的 <code>workspace</code> 目录，再新建一个 Session。凭据在运行机器上配置，现场展示可以在保存后再投屏。</p>
+<figure class="diagram "><div class="diagram-title">一个工作区可以有多段会话</div><div class="fan"><div class="fanhead"><div class="node"><strong>workspace/</strong><span>README.md 与 src/average.ts</span></div></div><div class="fanleaves"><div class="node"><strong>Session A</strong><span>检查空数组</span></div><div class="node"><strong>Session B</strong><span>编写单元测试</span></div><div class="node"><strong>Session C</strong><span>讨论重构方案</span></div></div></div><figcaption>文件位于共同的工作目录中。每段会话独立记录输入、工具结果与回复。</figcaption></figure>
+<p><strong>发给 Agent 的任务</strong>　“请只读检查 README.md 和 src/average.ts，解释空数组的实际结果，给出最小修复建议。请使用文件读取工具，不运行 Shell，不修改文件。”</p>
+<h3>怎样知道它真的读过文件？</h3>
+<p>打开本轮轨迹（Trajectory），找到文件读取的 <strong>Tool Call</strong>，再展开对应的 <strong>Tool Result</strong>。看结果里有没有 README 的返回约定，以及函数里的除法。模型给出正确结论，可能只凭经验；一对调用和结果才说明本次检查拿到了哪些证据。</p>
+<figure class="diagram "><div class="diagram-title">从“请检查”到能核对的回答</div><div class="chain"><div class="node"><strong>用户</strong><span>提出检查任务</span></div><div class="node"><strong>模型</strong><span>选择读文件</span></div><div class="node"><strong>工具</strong><span>读取两个文件</span></div><div class="node"><strong>模型</strong><span>对照约定解释 NaN</span></div></div><figcaption>沿工具调用 ID 能找到对应的文件读取结果。</figcaption></figure>
+<p><strong>验收</strong>　能打开 Web UI、选中模型、选对目录，在同一轮记录里找到两个文件的内容，并解释 <code>average([])</code> 为什么得到 <code>NaN</code>。建议修复为先检查 <code>values.length === 0</code>，再计算平均值。工作区指定操作目录；实际访问边界由工具权限和运行环境决定。</p>
+</section><section class="chapter" id="cordis"><header><div class="chapter-no">第 02 节</div><h2>Cordis 怎样组织插件</h2><p>用两个插件观察依赖就绪、启动、卸载和清理。</p></header><p>如果告警插件先启动，而 Grafana 客户端还没准备好，谁让它等？如果客户端被替换，谁负责关掉旧插件留下的定时器？Cordis 把依赖声明和资源归属放在同一个插件生命周期里。</p>
+<figure class="diagram "><div class="diagram-title">一个插件实例的生命周期</div><div class="chain"><div class="node"><strong>PENDING</strong><span>等待依赖</span></div><div class="node"><strong>LOADING</strong><span>调用 apply</span></div><div class="node"><strong>ACTIVE</strong><span>服务可用</span></div><div class="node"><strong>UNLOADING</strong><span>运行清理</span></div><div class="node"><strong>DISPOSED</strong><span>显式释放完成</span></div></div><div class="branch-note"><b>分支</b> 加载失败 → FAILED　·　依赖丢失 → 清理并等待 → 依赖恢复后重新加载</div><figcaption>显式释放后实例结束。依赖变化触发的卸载还可以回到等待状态。</figcaption></figure>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>在 Grafana 实验中有什么用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Context · <code>ctx</code></td>
+<td>Cordis 为插件提供的作用域入口；从这里取服务、监听事件、挂载子插件。</td>
+</tr>
+<tr>
+<td>Plugin · <code>apply</code></td>
+<td>可以挂载、运行、卸载的模块。依赖满足后，Cordis 调用入口 <code>apply(ctx)</code>。</td>
+</tr>
+<tr>
+<td>Service</td>
+<td>供其他插件调用的接口。多个消费者通过 <code>ctx.grafana</code> 共用客户端、连接和缓存。</td>
+</tr>
+<tr>
+<td><code>inject</code></td>
+<td>声明必需服务的名称。提供方尚未就绪，消费者就等待；服务恢复后可重新加载。</td>
+</tr>
+<tr>
+<td>Fiber</td>
+<td>一次挂载对应的实例，记录状态并持有资源。<code>ctx.plugin(...)</code> 返回 Fiber；<code>await fiber.dispose()</code> 等待清理完成。</td>
+</tr>
+<tr>
+<td>Event / effect</td>
+<td>事件把变化通知其他插件。<code>ctx.effect</code> 绑定外部资源和释放函数，卸载时一起清理。</td>
+</tr>
+</tbody>
+</table>
+<h3>实验：把消费者写在提供方前面</h3>
+<p>从源码运行下面的实验，后面几节也沿用这个检出目录。首次准备需要安装仓库声明的 pnpm 版本和构建依赖，可对照页末的官方源码说明。</p>
+<div class="codebox"><div class="codehead"><span>终端 · 准备源码</span><b>BASH</b></div><pre tabindex="0"><code class="hl" data-lang="bash">git<span class="w"> </span>clone<span class="w"> </span>https://github.com/deepseek-ai/deepseek-harness.git
+<span class="nb">cd</span><span class="w"> </span>deepseek-harness
+git<span class="w"> </span>checkout<span class="w"> </span>2e39e70496aa02986ca6a820c5d497e816b69d7e
+pnpm<span class="w"> </span>install
+pnpm<span class="w"> </span>run<span class="w"> </span>build
+mkdir<span class="w"> </span>-p<span class="w"> </span>tmp/cordis-tutorial<span class="w"> </span>scratch-plugin/src</code></pre></div><p>把以下三个文件放在 <code>tmp/cordis-tutorial/</code>。第一个文件同时做两件事：<code>declare module</code> 让 TypeScript 认识服务的类型；<code>super(ctx, 'grafana')</code> 在运行时提供服务。</p>
+<div class="codebox"><div class="codehead"><span>grafana.ts · 提供方</span><b>TS</b></div><pre tabindex="0"><code class="hl" data-lang="ts"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Service</span><span class="p">,</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="nx">Context</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/cordis'</span>
 
-function investigate() {
-  const history = [{ role: &quot;user&quot;, text: &quot;调查订单服务 500&quot; }];
-  for (let step = 1; step &lt;= 4; step++) {
-    const reply = decide(history);
-    history.push({ role: &quot;assistant&quot;, ...reply });
-    if (!reply.name) return history;
-    history.push({ role: &quot;tool&quot;, callId: reply.id,
-                   text: evidence[reply.name] });
-  }
-  throw new Error(&quot;已达到本次演示的步数上限&quot;);
-}
+<span class="kd">class</span><span class="w"> </span><span class="nx">Grafana</span><span class="w"> </span><span class="k">extends</span><span class="w"> </span><span class="nx">Service</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">ctx</span><span class="o">:</span><span class="w"> </span><span class="kt">Context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">super</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="s1">'grafana'</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="nx">getAlerts</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">[</span><span class="s1">'A001'</span><span class="p">,</span><span class="w"> </span><span class="s1">'A002'</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="kr">declare</span><span class="w"> </span><span class="nx">module</span><span class="w"> </span><span class="s1">'@deepseek-ai/cordis'</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">interface</span><span class="w"> </span><span class="nx">Context</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">grafana</span><span class="o">:</span><span class="w"> </span><span class="kt">Grafana</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">apply</span><span class="p">(</span><span class="nx">ctx</span><span class="o">:</span><span class="w"> </span><span class="kt">Context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">plugin</span><span class="p">(</span><span class="nx">Grafana</span><span class="p">)</span>
+<span class="p">}</span></code></pre></div><div class="codebox"><div class="codehead"><span>rca.ts · 消费者</span><b>TS</b></div><pre tabindex="0"><code class="hl" data-lang="ts"><span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Context</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/cordis'</span>
 
-console.table(investigate())</code></pre></div><div class="runbar"><button id="run">运行示例 →</button><small>无网络请求</small></div><pre id="result" aria-live="polite" hidden></pre><h3>接入真实工具时，运行时还要处理什么？</h3><p>一次响应可能请求多个工具。该版本默认允许同批最多 10 个并发调用，<code>maxParallelToolCalls: 1</code> 可使其串行，要求独占的工具会形成执行屏障。用户取消时，运行时通过信号通知正在工作的组件退出，并保留已送达的文本。工具本身也要响应取消信号。</p></section><section id="history"><header class="sectionhead"><span>04</span><div><h2>进程退出后，还能恢复什么？</h2><p>DSH 将已接纳的事实追加到 Session Log，再从事件派生模型使用的消息历史。配置 JSONL 持久化后，重启进程可以重建已经保存的会话。</p></div></header><figure class="journal"><div><small>追加事件 · 节选</small><code>turn/start<br>step/start<br>assistant/message<br>tool/call<br>tool/result<br>step/end</code></div><div><small>从同一份记录读取</small><b>模型上下文</b><p>将相关消息与工具结果交给下一步。</p><b>调查轨迹</b><p>通过调用 ID 配对请求与结果，定位哪一步未完成。</p></div></figure><h3>“没有成功记录”能证明回滚失败吗？</h3><p>假设外部系统已完成回滚，而 Agent 在写入 <code>tool/result</code> 前崩溃。重放日志能恢复已知历史，此时外部操作的结果仍然未知。先用稳定的 <code>operationId</code> 查询外部状态，再决定是否重试。服务端也应以该 ID 去重，避免重复执行。</p></section><section id="ptc"><header class="sectionhead"><span>05</span><div><h2>Native 与 PTC 怎么选？</h2><p>共同的问题是查一批告警，告诉用户哪些仍在触发。两种方式的区别，主要在于中间结果由谁读取、筛选和汇总。</p></div></header><div class="pair"><article><small>NATIVE TOOL CALLING</small><h3>模型看结果，决定后续动作</h3><p>模型直接看到可用工具及参数结构。一次响应可以提出多个调用，再读取返回的结果。若下一步需要理解一段含糊的日志，这种方式便于模型逐步判断。</p></article><article><small>PROGRAMMATIC TOOL CALLING</small><h3>程序处理结果，模型读摘要</h3><p>模型看到 <code>run_code</code> 和动态生成的 TypeScript SDK。它可用循环、分支和过滤组合工具，只把选出的值交回模型。嵌套调用仍走工具执行与权限流程。</p></article></div>
-<div class="calc"><label for="n">模拟查询的告警数 <output id="num" for="n">10</output></label><input id="n" type="range" min="1" max="20" value="10"><div class="counts"><div><b id="serial">11</b><span>Native 逐个决策</span></div><div><b>2</b><span>Native 一批并发</span></div><div><b>2</b><span>PTC 一段程序</span></div></div><p>数字表示模型请求数。假设 ID 已知、每个告警查一次、全部成功，最后再请求一次模型写总结。逐个决策为 N + 1；另两者各用一次请求发起查询、一次总结。三种方式查询告警的次数均为 N。这是推演，不是性能实测。</p></div>
-<div class="code"><div class="cap">TypeScript · PTC 程序体</div><pre tabindex="0"><code>// run_code 内的示例。假设已注册 get_grafana_alert，
-// 其 SDK 返回 { id: string, status: string, service: string }。
-const ids = [&quot;A001&quot;, &quot;A002&quot;, &quot;A003&quot;];
-const alerts = await Promise.all(
-  ids.map(id =&gt; tools.get_grafana_alert({ id }))
-);
-const firing = alerts
-  .filter(alert =&gt; alert.status === &quot;firing&quot;)
-  .map(({ id, service }) =&gt; ({ id, service }));
-inspect(firing);</code></pre></div><p>若 A001 与 A003 正在触发，<code>inspect</code> 只输出这两条的编号和服务名。原始告警详情留在程序内。若必须逐条阅读详情才能决定下一步，或只查一条告警，生成和执行程序的额外开销也应计入。</p><details><summary>在 DSH 中切换执行器</summary><p>在同时声明这两个插件的基础组合中，把下面片段保存为 <code>ptc.patch.yml</code>。在已完成依赖安装和模型配置的 DSH 源码根目录运行 <code>pnpm dsh web --patch ./ptc.patch.yml</code>。如果 Web Agent 有自己的执行器，选用其 PTC 预设；最近作用域的执行器生效。</p><div class="code"><div class="cap">YAML · ptc.patch.yml</div><pre tabindex="0"><code>- id: tool-executor-native
-  disabled: true
+<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">inject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">'grafana'</span><span class="p">]</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">apply</span><span class="p">(</span><span class="nx">ctx</span><span class="o">:</span><span class="w"> </span><span class="kt">Context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'已接入告警源'</span><span class="p">,</span><span class="w"> </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">grafana</span><span class="p">.</span><span class="nx">getAlerts</span><span class="p">())</span>
+<span class="w">  </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">effect</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">timer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">setInterval</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'检查告警'</span><span class="p">,</span><span class="w"> </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">grafana</span><span class="p">.</span><span class="nx">getAlerts</span><span class="p">())</span>
+<span class="w">    </span><span class="p">},</span><span class="w"> </span><span class="mf">5000</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">clearInterval</span><span class="p">(</span><span class="nx">timer</span><span class="p">)</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="p">}</span></code></pre></div><div class="codebox"><div class="codehead"><span>cordis.yml · 消费者列在第一行</span><b>YAML</b></div><pre tabindex="0"><code class="hl" data-lang="yaml"><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">'./rca.ts'</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">'./grafana.ts'</span></code></pre></div><div class="codebox"><div class="codehead"><span>在 tmp/cordis-tutorial 下运行</span><b>BASH</b></div><pre tabindex="0"><code class="hl" data-lang="bash">node<span class="w"> </span>--import<span class="w"> </span>tsx<span class="w"> </span>../../vendor/cordis/bin.js</code></pre></div><p>看到 <code>已接入告警源 [ 'A001', 'A002' ]</code>，说明消费者启动时服务已经就绪。每五秒检查一次，演示后可用 Ctrl+C 退出。去掉提供方再运行，消费者会等待。插件卸载时，Cordis 会调用 effect 返回的清理函数，旧定时器随之停止。框架也会跟踪 <code>ctx.on</code> 的监听器和 <code>ctx.plugin</code> 的子插件。</p>
+<p><strong>如果你用过 NestJS</strong>，可以从“调用方依赖接口”理解 Service。NestJS 常见写法从构造器取得 Provider；这里通过 <code>inject</code> 声明依赖、通过 <code>ctx</code> 访问。Cordis 还要在运行中处理服务消失、插件重新加载以及旧资源的清理。</p>
+<h3>同一个 Grafana 能力，四个概念怎么选？</h3>
+<figure class="diagram "><div class="diagram-title">两条接入 Grafana 的路径</div><div class="lane"><div class="lane-label">本地插件</div><div class="chain"><div class="node"><strong>DSH Agent</strong><span>选择 Tool</span></div><div class="node"><strong>原生 Tool</strong><span>直接查询或调用 Service</span></div><div class="node"><strong>Grafana API</strong><span>返回告警</span></div></div></div><div class="lane"><div class="lane-label">跨进程</div><div class="chain"><div class="node"><strong>DSH Agent</strong><span>选择已注册工具</span></div><div class="node"><strong>MCP Client</strong><span>通过协议请求 Server</span></div><div class="node"><strong>MCP Server</strong><span>查询 Grafana API</span></div></div></div><figcaption>外部工具经 MCP Client 注册进 DSH 工具体系，同样可以被模型发现。</figcaption></figure>
+<p><strong>Plugin</strong> 管理安装与生命周期。<strong>Service</strong> 把能力给同一运行时里的其他代码。<strong>Tool</strong> 把带参数契约的操作给模型。<strong>MCP</strong>（Model Context Protocol）让不同应用通过协议发现并使用外部能力。只做一个查询时，可直接写 Tool 插件；多个工具共享鉴权和缓存时再抽 Service；已有可复用的 Grafana MCP Server 时，通过 DSH 的 MCP Client 接入。宿主的会话记录、权限拦截仍由 DSH 管理。</p>
+</section><section class="chapter" id="tool"><header><div class="chapter-no">第 03 节</div><h2>开发一个模型可调用的 Tool</h2><p>给模型一份它能理解的接口，用只读数据验证整条调用路径。</p></header><p>现在让 Agent 回答“告警 A001 影响哪个服务？”模型只需要知道工具名、用途和输入格式。业务代码、输出校验和结果呈现都留在宿主。下面用两个静态告警替代真实 Grafana，现场演示无需访问生产系统。</p>
+<figure class="diagram "><div class="diagram-title">一个工具的输入和两种输出</div><div class="chain"><div class="node"><strong>模型</strong><span>提交 alertId</span></div><div class="node"><strong>parameters</strong><span>校验结构</span></div><div class="node"><strong>execute</strong><span>查询告警</span></div><div class="node"><strong>output.schema</strong><span>校验规范值</span></div></div><div class="split"><div><b>程序读取</b><span>PTC 按字段取值、过滤</span></div><div><b>模型阅读</b><span>render 生成文本或其他内容</span></div></div><figcaption>工具描述帮助模型决定何时调用。执行代码与数据访问由宿主掌控。</figcaption></figure>
+<h3>把工具注册到 DSH</h3>
+<p>在源码根目录创建 <code>scratch-plugin/src/my-plugin.ts</code>。这个例子保留结构化返回值，既能渲染给模型阅读，也方便后面的 PTC 程序筛选。</p>
+<div class="codebox"><div class="codehead"><span>scratch-plugin/src/my-plugin.ts</span><b>TS</b></div><pre tabindex="0"><code class="hl" data-lang="ts"><span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Context</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/cordis'</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">defineTool</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/dsh-tools'</span>
 
-- id: tool-executor-ptc
-  disabled: false</code></pre></div><p>生产环境还应设置工具权限、执行超时和资源预算。</p></details></section><section id="hooks"><header class="sectionhead"><span>06</span><div><h2>观察执行，还是改变执行？</h2><p>两个插件的挂载点不同。事件监听器能告诉你发生过什么；执行前的 Hook 可以改变一次工具调用的去向。</p></div></header><h3>观察 · 给每条调查轨迹加上序号</h3><p>在同一 DSH 工作区的插件包中使用下列 TypeScript，声明对应依赖并通过 Cordis 加载。触发一次会用到工具的调查后，按会话 ID 过滤日志，即可看到每轮起止与工具活动。</p><div class="code"><div class="cap">TypeScript · loop-logger.ts</div><pre tabindex="0"><code>import type { Context } from &#x27;@deepseek-ai/cordis&#x27;
-import type {} from &#x27;@deepseek-ai/dsh-session&#x27;
+<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">inject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">'tools'</span><span class="p">]</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">alerts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">([</span>
+<span class="w">  </span><span class="p">[</span><span class="s1">'A001'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">service</span><span class="o">:</span><span class="w"> </span><span class="s1">'order-api'</span><span class="p">,</span><span class="w"> </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="s1">'firing'</span><span class="w"> </span><span class="p">}],</span>
+<span class="w">  </span><span class="p">[</span><span class="s1">'A002'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">service</span><span class="o">:</span><span class="w"> </span><span class="s1">'payment-api'</span><span class="p">,</span><span class="w"> </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="s1">'resolved'</span><span class="w"> </span><span class="p">}],</span>
+<span class="p">])</span>
 
-export const name = &#x27;loop-logger&#x27;
-export const inject = [&#x27;sessions&#x27;]
-const tracked = new Set([
-  &#x27;turn/start&#x27;, &#x27;step/start&#x27;, &#x27;tool/call&#x27;,
-  &#x27;tool/result&#x27;, &#x27;step/end&#x27;, &#x27;turn/end&#x27;,
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">apply</span><span class="p">(</span><span class="nx">ctx</span><span class="o">:</span><span class="w"> </span><span class="kt">Context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">tools</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="nx">defineTool</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">'get_grafana_alert'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s1">'调查告警时，按 ID 查询影响的服务和当前状态。'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">parameters</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">alertId</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'string'</span><span class="p">,</span><span class="w"> </span><span class="nx">required</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s1">'例如 A001'</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">output</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">schema</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'object'</span><span class="p">,</span><span class="w"> </span><span class="nx">additionalProperties</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w"> </span><span class="nx">properties</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'string'</span><span class="p">,</span><span class="w"> </span><span class="nx">required</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">          </span><span class="nx">found</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'boolean'</span><span class="p">,</span><span class="w"> </span><span class="nx">required</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">          </span><span class="nx">service</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'string'</span><span class="p">,</span><span class="w"> </span><span class="nx">required</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">          </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'string'</span><span class="p">,</span><span class="w"> </span><span class="nx">required</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nx">render</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">_args</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'text'</span><span class="p">,</span><span class="w"> </span><span class="nx">text</span><span class="o">:</span><span class="w"> </span><span class="kt">v.found</span>
+<span class="w">        </span><span class="o">?</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">id</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">' · '</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">service</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">' · '</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">status</span>
+<span class="w">        </span><span class="o">:</span><span class="w"> </span><span class="s1">'查无告警 '</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">id</span><span class="w"> </span><span class="p">}],</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="k">async</span><span class="w"> </span><span class="nx">execute</span><span class="p">({</span><span class="w"> </span><span class="nx">alertId</span><span class="w"> </span><span class="p">})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">alertId</span><span class="p">.</span><span class="nx">trim</span><span class="p">()</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">id</span><span class="p">)</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">'告警 ID 不能为空'</span><span class="p">)</span>
+<span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">alerts</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">found</span><span class="o">:</span><span class="w"> </span><span class="o">!!</span><span class="nx">row</span><span class="p">,</span><span class="w"> </span><span class="nx">service</span><span class="o">:</span><span class="w"> </span><span class="kt">row?.service</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s1">''</span><span class="p">,</span>
+<span class="w">               </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="kt">row?.status</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s1">'unknown'</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">}))</span>
+<span class="p">}</span></code></pre></div><p><code>parameters</code> 拦住类型不对的输入。<code>execute</code> 负责业务判断并返回规范值（canonical value）。<code>output.schema</code> 描述这个值的结构；<code>render</code> 把它转换成模型可读的内容。例如程序能取出 <code>found</code> 这个布尔值，人读到的是“查无告警 A999”。敏感字段应在构造规范值时移除，因为程序化调用可能直接读到它们。</p>
+<div class="codebox"><div class="codehead"><span>scratch-plugin/cordis.yml · 将路径替换为本机源码绝对路径</span><b>YAML</b></div><pre tabindex="0"><code class="hl" data-lang="yaml"><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">insert</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">grafana-tool</span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">'/absolute/path/to/deepseek-harness/scratch-plugin/src/my-plugin.ts'</span></code></pre></div><div class="codebox"><div class="codehead"><span>在源码根目录启动</span><b>BASH</b></div><pre tabindex="0"><code class="hl" data-lang="bash">pnpm<span class="w"> </span>dsh<span class="w"> </span>web<span class="w"> </span>--patch<span class="w"> </span>./scratch-plugin/cordis.yml</code></pre></div><p>在 Web UI 请求“调用 get_grafana_alert 查询 A001”，展开工具结果。预期摘要为 <code>A001 · order-api · firing</code>。这一条证据确定了受影响的服务；找出告警原因还要查指标、日志和发布记录。</p>
+<h3>试一试：错误发生在哪一层？</h3>
+<div class="lab"><div class="labhead"><b>参数校验实验</b><small>本地模拟</small></div><div class="choices" aria-label="选择测试输入"><button type="button" data-arg="0" aria-pressed="true"><code>"A001"</code></button><button type="button" data-arg="1" aria-pressed="false"><code>123</code></button><button type="button" data-arg="2" aria-pressed="false"><code>""</code></button><button type="button" data-arg="3" aria-pressed="false"><code>"A999"</code></button></div><div class="readout" aria-live="polite" id="arg-output"><b>正常执行</b><p>A001 · order-api · firing</p></div></div>
+<p>接入真实 Grafana 时，让服务端只读凭据控制访问范围，让 HTTP 请求响应超时和取消信号，并限制最大结果数。把“没有匹配记录”“认证失败”“上游限流”分开返回，Agent 才能选择换条件、请求授权或稍后重试。练习时再注册一个 <code>list_grafana_alerts</code> 来返回可查询的 ID；当两个工具开始共享同一客户端，就有了拆出 Service 的理由。</p>
+</section><section class="chapter" id="compose"><header><div class="chapter-no">第 04 节</div><h2>配置、打包与组合 Agent</h2><p>用同一份插件代码组成开发、生产和不同用途的运行环境。</p></header><p><strong>Config</strong> 描述这个插件实例怎么运行，<strong>Bundle</strong> 描述要分发哪些插件与配置，<strong>Profile</strong> 记录一次应用启动时按什么顺序加载哪些 Bundle。比如 RCA 和 Coding 两套运行环境都可以复用 GitHub 工具包，但只有 RCA 需要查询 Grafana。</p>
+<figure class="diagram bundles"><div class="diagram-title">两个 Profile 复用同一个 Bundle</div><div class="lane"><div class="lane-label">RCA Profile</div><div class="chain"><div class="node"><strong>Grafana</strong><span>查询告警</span></div><div class="node"><strong>GitHub</strong><span>读取变更</span></div><div class="node"><strong>Logs</strong><span>检索日志</span></div></div></div><div class="lane"><div class="lane-label">Coding Profile</div><div class="chain"><div class="node"><strong>Editor</strong><span>修改源码</span></div><div class="node"><strong>GitHub</strong><span>读取变更</span></div><div class="node"><strong>Shell</strong><span>运行命令</span></div></div></div><figcaption>两行中的 GitHub 是同一个可复用的包。每个 Profile 有自己的安装清单与覆盖配置。</figcaption></figure>
+<h3>给插件加配置契约</h3>
+<p>下面是一个独立的配置示例。<code>interface Config</code> 供 TypeScript 检查，导出的同名 Schema 供 Cordis 在启动时校验 YAML 并填入默认值。真实请求要把 <code>timeoutMs</code> 传给超时机制，它才会影响网络行为。</p>
+<div class="codebox"><div class="codehead"><span>config-demo.ts</span><b>TS</b></div><pre tabindex="0"><code class="hl" data-lang="ts"><span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Context</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/cordis'</span>
+<span class="k">import</span><span class="w"> </span><span class="nx">Schema</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/schemastery'</span>
+
+<span class="k">export</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="nx">Config</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">environment</span><span class="o">:</span><span class="w"> </span><span class="s1">'dev'</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">'prod'</span><span class="p">;</span><span class="w"> </span><span class="nx">timeoutMs</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">}</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">Config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Schema</span><span class="p">.</span><span class="nx">object</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">environment</span><span class="o">:</span><span class="w"> </span><span class="kt">Schema.union</span><span class="p">([</span><span class="s1">'dev'</span><span class="p">,</span><span class="w"> </span><span class="s1">'prod'</span><span class="p">]).</span><span class="k">default</span><span class="p">(</span><span class="s1">'dev'</span><span class="p">),</span>
+<span class="w">  </span><span class="nx">timeoutMs</span><span class="o">:</span><span class="w"> </span><span class="kt">Schema.number</span><span class="p">().</span><span class="nx">min</span><span class="p">(</span><span class="mf">1000</span><span class="p">).</span><span class="nx">max</span><span class="p">(</span><span class="mf">60000</span><span class="p">).</span><span class="k">default</span><span class="p">(</span><span class="mf">10000</span><span class="p">),</span>
+<span class="p">})</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">apply</span><span class="p">(</span><span class="nx">ctx</span><span class="o">:</span><span class="w"> </span><span class="kt">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="o">:</span><span class="w"> </span><span class="kt">Config</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">environment</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="p">.</span><span class="nx">timeoutMs</span><span class="p">)</span>
+<span class="p">}</span></code></pre></div><p>普通参数如超时、环境、结果上限放在 Config；API Token 交给凭据服务或密钥管理系统注入。环境变量负责提供值，Schema 负责判断取值是否合法。</p>
+<h3>打包一次，安装到指定 Profile</h3>
+<p>先做一个只打印启动日志的最小 Bundle，便于单独验证安装链路。在源码根目录新建 <code>tutorial-grafana-bundle/</code>，把以下三个文件放进去。</p>
+<div class="codebox"><div class="codehead"><span>package.json</span><b>JSON</b></div><pre tabindex="0"><code class="hl" data-lang="json"><span class="p">{</span>
+<span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dsh-grafana-demo"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.1.0"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"module"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"main"</span><span class="p">:</span><span class="w"> </span><span class="s2">"index.js"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"files"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"index.js"</span><span class="p">,</span><span class="w"> </span><span class="s2">"cordis.patch.yml"</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"dsh"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"bundle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"patch"</span><span class="p">:</span><span class="w"> </span><span class="s2">"./cordis.patch.yml"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span></code></pre></div><div class="codebox"><div class="codehead"><span>index.js</span><b>JS</b></div><pre tabindex="0"><code class="hl" data-lang="js"><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">apply</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'[grafana-demo] plugin loaded'</span><span class="p">)</span>
+<span class="p">}</span></code></pre></div><div class="codebox"><div class="codehead"><span>cordis.patch.yml · Bundle 贡献的插件条目</span><b>YAML</b></div><pre tabindex="0"><code class="hl" data-lang="yaml"><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">insert</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">grafana-demo</span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dsh-grafana-demo</span></code></pre></div><div class="codebox"><div class="codehead"><span>在源码根目录验证安装</span><b>BASH</b></div><pre tabindex="0"><code class="hl" data-lang="bash">pnpm<span class="w"> </span>dsh<span class="w"> </span>plugin<span class="w"> </span>--profile<span class="w"> </span>web<span class="w"> </span>add<span class="w"> </span>./tutorial-grafana-bundle
+pnpm<span class="w"> </span>dsh<span class="w"> </span>--profile<span class="w"> </span>web<span class="w"> </span>--dump-config
+pnpm<span class="w"> </span>dsh<span class="w"> </span>web</code></pre></div><p>在最终配置中查找 <code>grafana-demo</code>，启动时应能看到日志。<code>$DSH_HOME/profiles/web/package.json</code> 中的 <code>dsh.profile.bundles</code> 记录有序清单，CLI 会维护依赖。缺少 <code>dsh.bundle</code> 声明的 npm 包只能作为普通依赖使用。分发第三节的 Tool 时，将 TypeScript 编译为入口文件并声明与宿主兼容的依赖。模型是否看到该工具，还取决于 Agent 作用域、预设和权限。</p>
+<h3>配置叠加时，哪个值会留下？</h3>
+<figure class="diagram "><div class="diagram-title">同一插件行的配置优先级</div><div class="chain"><div class="node"><strong>Bundle</strong><span>按清单顺序</span></div><div class="node"><strong>Profile</strong><span>当前运行组合</span></div><div class="node"><strong>Home</strong><span>本机公共覆盖</span></div><div class="node"><strong>--patch</strong><span>命令行从左到右</span></div></div><figcaption>按从左到右的顺序应用。后层按 ID 命中同一行时，提供的新 config 整体替换旧值。</figcaption></figure>
+<p>假设带 Config 的插件在 Bundle 内设了 <code>environment: prod</code> 和 <code>timeoutMs: 5000</code>。Profile 对同一行只写下面的配置。先猜一下最终环境，再展开答案。</p>
+<div class="codebox"><div class="codehead"><span>Profile 的 cordis.patch.yml · 定位同一个插件 ID</span><b>YAML</b></div><pre tabindex="0"><code class="hl" data-lang="yaml"><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">configured-grafana</span>
+<span class="w">  </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">timeoutMs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30000</span></code></pre></div><details><summary>查看最终配置与原因</summary><p>该行的整个 config 被替换。Schema 随后补入 environment 的默认值 dev，最终是 dev / 30000。若要保留生产环境，应在覆盖行内显式写入 environment: prod。如果缺少无默认值的必填项，加载会失败。</p></details>
+<p><strong>修改后何时生效？</strong> 在本讲义固定的源码版本里，启用 HMR 的 Profile 能重新组合配置，并可热应用部分包变更。看插件管理器报告的应用状态；返回 <code>restart-required</code> 时重启对应 Profile。关闭 HMR 时，运行中的组合通常保留到重启。核对最终层次用 <code>--dump-config</code>，核对已经加载的实例则看运行状态和启动日志。</p>
+</section><section class="chapter" id="loop"><header><div class="chapter-no">第 05 节</div><h2>Agent Loop 如何推进一次调查</h2><p>从一次模型决策追踪到工具执行、会话记录和下一次决策。</p></header><p>用户问“20:00 之后订单服务为什么开始报 500？”模型可以先查指标，再依据查询结果决定是否看日志。DSH 默认的 Agent Loop 负责组装上下文、请求模型、调度工具、记录结果，并在还有工作时继续。调查策略可以写进指令和插件，驱动器可复用同一套执行机制。</p>
+<figure class="diagram "><div class="diagram-title">一段 Session 里的两轮调查</div><div class="session-wrap"><b>Session　订单服务故障</b><div class="lane"><div class="lane-label">Turn 1 · 调查</div><div class="chain"><div class="node"><strong>Step 1</strong><span>查指标</span></div><div class="node"><strong>Step 2</strong><span>读日志</span></div><div class="node"><strong>Step 3</strong><span>查部署</span></div><div class="node"><strong>Step 4</strong><span>给出结论</span></div></div></div><div class="lane"><div class="lane-label">Turn 2 · 追问</div><div class="chain"><div class="node"><strong>Step 1</strong><span>查流量</span></div><div class="node"><strong>Step 2</strong><span>补充判断</span></div></div></div></div><figcaption>最后一个 Step 可以直接产出文字。用户继续追问时可以复用第一轮积累的证据。</figcaption></figure>
+<p><strong>Session</strong> 保存整段可追问的调查。<strong>Turn</strong> 对应一轮已领取输入的处理。<strong>Step</strong> 包含一次模型决策及其工具批次，可能调用零个或多个工具。若首步进入前即被拒，Turn 可以有零个 Step；同一步内也可能重试模型请求。</p>
+<figure class="diagram "><div class="diagram-title">一个 Step 何时接回循环？</div><div class="chain"><div class="node"><strong>Driver</strong><span>领取待处理输入</span></div><div class="node"><strong>Prompt + Session</strong><span>组装上下文</span></div><div class="node"><strong>LLM</strong><span>生成回复或工具请求</span></div></div><div class="split"><div><b>有工具请求 ↺</b><span>校验并执行 → 追加结果 → 下一 Step</span></div><div><b>没有待处理工作 ✓</b><span>保存回复 → 结束 Turn → 等待新输入</span></div></div><figcaption>会话记录保留执行事实。模型上下文由这些事实派生。</figcaption></figure>
+<table>
+<thead>
+<tr>
+<th>服务</th>
+<th>这次调查中做什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ctx.agents</code> / <code>ctx.agentLoop</code></td>
+<td>前者创建或恢复 Agent；默认驱动器推进每一轮的步骤。</td>
+</tr>
+<tr>
+<td><code>ctx.systemPrompt</code> / <code>ctx.llm</code></td>
+<td>组装当步指令和可见工具，按模型路由发送请求、处理流式响应。</td>
+</tr>
+<tr>
+<td><code>ctx.tools</code> / <code>ctx.sessions</code></td>
+<td>校验并执行调用，把可重放的事实追加到会话历史。</td>
+</tr>
+</tbody>
+</table>
+<div class="codebox"><div class="codehead"><span>控制循环 · 教学伪代码，model、runtime 由宿主提供</span><b>JS</b></div><pre tabindex="0"><code class="hl" data-lang="js"><span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">investigate</span><span class="p">(</span><span class="nx">history</span><span class="p">,</span><span class="w"> </span><span class="nx">model</span><span class="p">,</span><span class="w"> </span><span class="nx">runtime</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">step</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">8</span><span class="p">;</span><span class="w"> </span><span class="nx">step</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">reply</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">model</span><span class="p">.</span><span class="nx">decide</span><span class="p">(</span><span class="nx">history</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">history</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">reply</span><span class="p">.</span><span class="nx">message</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">reply</span><span class="p">.</span><span class="nx">calls</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nx">reply</span><span class="p">.</span><span class="nx">message</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">call</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">reply</span><span class="p">.</span><span class="nx">calls</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">runtime</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="nx">call</span><span class="p">)</span>
+<span class="w">      </span><span class="nx">history</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="w"> </span><span class="nx">role</span><span class="o">:</span><span class="w"> </span><span class="s1">'tool'</span><span class="p">,</span><span class="w"> </span><span class="nx">callId</span><span class="o">:</span><span class="w"> </span><span class="nx">call</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><span class="p">})</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">'达到本次调查的步数预算'</span><span class="p">)</span>
+<span class="p">}</span></code></pre></div><p>真实驱动器还需处理并发、取消、权限、失败和流式交付。当前版本默认同批最多 10 个并发调用，<code>maxParallelToolCalls: 1</code> 可切为串行；独占工具构成执行屏障。取消依赖执行器和工具响应信号。</p>
+<h3>会话恢复能恢复到哪里？</h3>
+<p><code>session/event</code> 提供已接纳的事件。启用 JSONL 持久化后，可以重放日志重建会话，也能查清哪一步拿到了什么结果。若外部系统已完成回滚，而进程在写入 <code>tool/result</code> 前崩溃，重放只能看到“已请求，结果未知”。重试前要按稳定的操作 ID 到外部系统核验；执行方应支持幂等去重。</p>
+<h3>Native 与 PTC：谁处理中间结果？</h3>
+<figure class="diagram "><div class="diagram-title">同样两条告警，中间结果去了哪里？</div><div class="lane"><div class="lane-label">Native</div><div class="chain"><div class="node"><strong>模型</strong><span>生成工具调用</span></div><div class="node"><strong>工具批次</strong><span>返回两条结果</span></div><div class="node"><strong>模型</strong><span>读取并筛选</span></div></div></div><div class="lane"><div class="lane-label">PTC</div><div class="chain"><div class="node"><strong>模型</strong><span>写 run_code</span></div><div class="node"><strong>TypeScript</strong><span>调用、过滤、聚合</span></div><div class="node"><strong>模型</strong><span>只读 inspect 的摘要</span></div></div></div><figcaption>两条路径都通过工具运行时。差异在于谁处理中间值。</figcaption></figure>
+<p>Native 把可见工具的接口直接提供给模型；一次响应可同时提出多个调用。PTC（Programmatic Tool Calling）把 <code>run_code</code> 和生成的 TypeScript SDK 提供给模型，程序内部可做循环、条件判断和聚合。底层工具仍受宿主的权限、超时和审计约束。</p>
+<div class="codebox"><div class="codehead"><span>run_code 程序体 · 配合第三节的结构化 Tool</span><b>TS</b></div><pre tabindex="0"><code class="hl" data-lang="ts"><span class="kd">const</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nb">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span>
+<span class="w">  </span><span class="p">[</span><span class="s1">'A001'</span><span class="p">,</span><span class="w"> </span><span class="s1">'A002'</span><span class="p">].</span><span class="nx">map</span><span class="p">(</span><span class="nx">alertId</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">tools</span><span class="p">.</span><span class="nx">get_grafana_alert</span><span class="p">({</span><span class="w"> </span><span class="nx">alertId</span><span class="w"> </span><span class="p">}))</span>
+<span class="p">)</span>
+<span class="nx">inspect</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">found</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">status</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">'firing'</span><span class="p">)</span>
+<span class="w">               </span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">r.id</span><span class="p">,</span><span class="w"> </span><span class="nx">service</span><span class="o">:</span><span class="w"> </span><span class="kt">r.service</span><span class="w"> </span><span class="p">})))</span></code></pre></div><p>两条都查，只有 <code>A001 / order-api</code> 进入摘要。假设十个 ID 已知，逐个请求模型再做一次总结需 11 次模型往返；Native 一次批量发起或 PTC 一段程序都可以只用 2 次。三者都做十次底层查询。PTC 的优势在于处理依赖和压缩中间结果；实际节省的时间和 Token 要按任务测量。</p>
+<div class="lab"><div class="labhead"><label for="count">比较模型往返次数</label><small>教学推演</small></div><div class="slider"><label for="count">告警数 <output id="count-val">10</output></label><input id="count" type="range" min="1" max="20" value="10"></div><div class="stats"><div><b id="serial">11</b>Native 逐个决策</div><div><b>2</b>Native 一批发出</div><div><b>2</b>PTC 程序编排</div></div></div>
+<div class="codebox"><div class="codehead"><span>ptc.patch.yml · 基础组合的执行器切换</span><b>YAML</b></div><pre tabindex="0"><code class="hl" data-lang="yaml"><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tool-executor-native</span>
+<span class="w">  </span><span class="nt">disabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tool-executor-ptc</span>
+<span class="w">  </span><span class="nt">disabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span></code></pre></div><p>从已配置的源码根目录运行 <code>pnpm dsh web --patch ./ptc.patch.yml</code>。在 Web UI 中使用有独立执行器的 Agent 时，选择它的 PTC 预设；最近作用域的执行器生效。</p>
+<h3>记录发生过什么，或决定能否执行</h3>
+<p>下面两个模块分别展示事件监听和执行前 Hook。可用第三节的 overlay 方式把文件加入插件树。日志只打印关联元数据；对照会话明细即可配对调用与结果。</p>
+<div class="codebox"><div class="codehead"><span>loop-logger.ts · 观察已记录的事件</span><b>TS</b></div><pre tabindex="0"><code class="hl" data-lang="ts"><span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Context</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/cordis'</span>
+<span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/dsh-session'</span>
+
+<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">inject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">'sessions'</span><span class="p">]</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">tracked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Set</span><span class="p">([</span><span class="s1">'turn/start'</span><span class="p">,</span><span class="w"> </span><span class="s1">'step/start'</span><span class="p">,</span><span class="w"> </span><span class="s1">'tool/call'</span><span class="p">,</span>
+<span class="w">                         </span><span class="s1">'tool/result'</span><span class="p">,</span><span class="w"> </span><span class="s1">'step/end'</span><span class="p">,</span><span class="w"> </span><span class="s1">'turn/end'</span><span class="p">])</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">apply</span><span class="p">(</span><span class="nx">ctx</span><span class="o">:</span><span class="w"> </span><span class="kt">Context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'session/event'</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">session</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">tracked</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="kr">type</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">session</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">.</span><span class="nx">seq</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">.</span><span class="kr">type</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="p">}</span></code></pre></div><div class="codebox"><div class="codehead"><span>rca-policy.ts · 工具执行前拦截</span><b>TS</b></div><pre tabindex="0"><code class="hl" data-lang="ts"><span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Context</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/cordis'</span>
+<span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/dsh-tools'</span>
+
+<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">inject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">'tools'</span><span class="p">]</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">apply</span><span class="p">(</span><span class="nx">ctx</span><span class="o">:</span><span class="w"> </span><span class="kt">Context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'tools/pre-execute'</span><span class="p">,</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">exec</span><span class="p">,</span><span class="w"> </span><span class="nx">next</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">exec</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">'rollback_deployment'</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="s1">'deny'</span><span class="p">,</span><span class="w"> </span><span class="nx">reason</span><span class="o">:</span><span class="w"> </span><span class="s1">'本次调查只允许读取证据'</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">next</span><span class="p">()</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="p">}</span></code></pre></div><p><code>next()</code> 把控制权交给后续处理器。命名工具拦截适合演示策略；强制只读还要结合最终守卫 <code>ctx.tools.guard()</code>、工具白名单及外部服务的只读凭据。添加查询能力用 Tool，共享缓存用 Service，观察耗时用事件；当每一阶段都必须由程序严格把关时，可使用 Workflow 或自定义 Agent。</p>
+</section><section class="chapter" id="rca"><header><div class="chapter-no">第 06 节</div><h2>把前五节串成一个 RCA 案例</h2><p>从一个告警 ID，到一份有证据、可追问的根因调查报告。</p></header><p>原学习路线把 RCA（Root Cause Analysis，根因分析）列为第六步。这里补全一个小型只读案例：让模型拿到告警、指标、日志和部署记录，并把<strong>观察事实、候选原因、待验证项</strong>分开写。数据全部来自内置样本，适合在投影和离线讲义里演示。</p>
+<figure class="diagram "><div class="diagram-title">从告警输入到可复查的结论</div><div class="chain"><div class="node"><strong>告警 ID</strong><span>定位服务</span></div><div class="node"><strong>只读 Tool</strong><span>取得证据编号</span></div><div class="node"><strong>Agent</strong><span>提出可检验的假设</span></div><div class="node"><strong>报告 + Session</strong><span>引用证据，保留轨迹</span></div></div><figcaption>若证据不够，输出下一项需要观测的量，允许调查停在“原因未定”。</figcaption></figure>
+<h3>现场演示：相近的告警，证据够不够？</h3>
+<div class="lab"><div class="labhead"><b>只读告警调查</b><small>教学样本 · 离线可用</small></div><div class="choices" aria-label="选择调查样本"><button data-case="A001" aria-pressed="true">A001 · 订单错误</button><button data-case="A002" aria-pressed="false">A002 · 支付延迟</button><button data-case="A999" aria-pressed="false">A999 · 未知编号</button></div><div id="case-output" class="readout" aria-live="polite"><b>A001 · order-api</b><p>三条证据：500 比例上升、等待连接超时、连接池上限调低。待核验连接池占用与同期流量。</p></div></div>
+<h3>把同一份证据接进 DSH</h3>
+<p>下面的 <code>evidence.js</code> 同时供页面演示和 DSH 插件使用。它只返回能核对的事实。一个样本有连接池变更，另一个样本缺少近期变更和失败日志；面对后者，报告应该保留“原因未定”。</p>
+<div class="codebox"><div class="codehead"><span>scratch-plugin/src/evidence.js · 两组模拟记录</span><b>JS</b></div><pre tabindex="0"><code class="hl" data-lang="js"><span class="kd">const</span><span class="w"> </span><span class="nx">samples</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">([</span>
+<span class="w">  </span><span class="p">[</span><span class="s1">'A001'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">service</span><span class="o">:</span><span class="w"> </span><span class="s1">'order-api'</span><span class="p">,</span><span class="w"> </span><span class="nx">facts</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">[</span><span class="s1">'M1'</span><span class="p">,</span><span class="w"> </span><span class="s1">'指标'</span><span class="p">,</span><span class="w"> </span><span class="s1">'20:00 后 HTTP 500 比例从 0.2% 升至约 7%。'</span><span class="p">],</span>
+<span class="w">    </span><span class="p">[</span><span class="s1">'L1'</span><span class="p">,</span><span class="w"> </span><span class="s1">'日志'</span><span class="p">,</span><span class="w"> </span><span class="s1">'失败请求报告等待数据库连接超时。'</span><span class="p">],</span>
+<span class="w">    </span><span class="p">[</span><span class="s1">'D1'</span><span class="p">,</span><span class="w"> </span><span class="s1">'部署'</span><span class="p">,</span><span class="w"> </span><span class="s1">'19:56 发布，连接池上限从 50 调低至 10。'</span><span class="p">],</span>
+<span class="w">  </span><span class="p">]</span><span class="w"> </span><span class="p">}],</span>
+<span class="w">  </span><span class="p">[</span><span class="s1">'A002'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">service</span><span class="o">:</span><span class="w"> </span><span class="s1">'payment-api'</span><span class="p">,</span><span class="w"> </span><span class="nx">facts</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">[</span><span class="s1">'M2'</span><span class="p">,</span><span class="w"> </span><span class="s1">'指标'</span><span class="p">,</span><span class="w"> </span><span class="s1">'支付接口过去五分钟的 P95 延迟从 180 ms 升至 850 ms。'</span><span class="p">],</span>
+<span class="w">  </span><span class="p">]</span><span class="w"> </span><span class="p">}],</span>
+<span class="p">])</span>
+
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">collectEvidence</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">alertId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">id</span><span class="p">.</span><span class="nx">trim</span><span class="p">().</span><span class="nx">toUpperCase</span><span class="p">()</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">samples</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">alertId</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">row</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">alertId</span><span class="p">,</span><span class="w"> </span><span class="nx">found</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nx">facts</span><span class="o">:</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">alertId</span><span class="p">,</span><span class="w"> </span><span class="nx">found</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="p">...</span><span class="nx">row</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>把 <code>evidence.js</code> 和下面的 <code>rca.ts</code> 放在 <code>scratch-plugin/src/</code>。<code>get_alert_context</code> 提供只读证据，模型负责解释它们，Session 留下这次用了哪份材料的轨迹。</p>
+<div class="codebox"><div class="codehead"><span>scratch-plugin/src/rca.ts</span><b>TS</b></div><pre tabindex="0"><code class="hl" data-lang="ts"><span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Context</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/cordis'</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">defineTool</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'@deepseek-ai/dsh-tools'</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">collectEvidence</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'./evidence.js'</span>
+
+<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">inject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">'tools'</span><span class="p">]</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">apply</span><span class="p">(</span><span class="nx">ctx</span><span class="o">:</span><span class="w"> </span><span class="kt">Context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">tools</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="nx">defineTool</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">'get_alert_context'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s1">'按告警 ID 读取 RCA 调查所需的指标、日志与部署记录。'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">parameters</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">alertId</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'string'</span><span class="p">,</span><span class="w"> </span><span class="nx">required</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">output</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">schema</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'string'</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nx">render</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">_args</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'text'</span><span class="p">,</span><span class="w"> </span><span class="nx">text</span><span class="o">:</span><span class="w"> </span><span class="kt">value</span><span class="w"> </span><span class="p">}],</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="k">async</span><span class="w"> </span><span class="nx">execute</span><span class="p">({</span><span class="w"> </span><span class="nx">alertId</span><span class="w"> </span><span class="p">})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">collectEvidence</span><span class="p">(</span><span class="nx">alertId</span><span class="p">))</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">}))</span>
+<span class="p">}</span></code></pre></div><div class="codebox"><div class="codehead"><span>scratch-plugin/rca.patch.yml · 替换为本机源码路径</span><b>YAML</b></div><pre tabindex="0"><code class="hl" data-lang="yaml"><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">insert</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rca-context</span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">'/absolute/path/to/deepseek-harness/scratch-plugin/src/rca.ts'</span></code></pre></div><div class="codebox"><div class="codehead"><span>从源码根目录启动</span><b>BASH</b></div><pre tabindex="0"><code class="hl" data-lang="bash">pnpm<span class="w"> </span>dsh<span class="w"> </span>web<span class="w"> </span>--patch<span class="w"> </span>./scratch-plugin/rca.patch.yml</code></pre></div><p>在新 Session 提问：“请用 get_alert_context 调查 A001。按事实、候选原因、待验证项写三段，给每条事实标注证据编号。”随后在同一会话追问：“如果连接池一直没满，这个假设还成立吗？” 模型应能指出需要核对连接池占用、获取连接延迟和同期流量。</p>
+<p><strong>验收</strong>　A001 的结论引用真实返回的证据编号；A002 明确写出缺少哪类证据；不存在的 ID 返回 <code>found: false</code>；运行轨迹能找到对应的 <code>tool/call</code> 与 <code>tool/result</code>。页面按钮展示可复现的示范报告，接上真实模型后的措辞会变化。</p>
+</section><footer id="sources"><div class="chapter-no">资料索引</div><h2>对照官方文档与源码</h2><p>教程按提交 <code>2e39e70</code> 核对。前五节对应原课程已展开的讲解，第六节按原路线补写。故障数据和离线报告均为教学样本。</p><div class="refs"><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/README.zh.md">安装与源码启动 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/docs/user/guide/index.zh.md">Web UI 操作指南 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/docs/cordis-tutorial/index.zh.md">Cordis 中文动手教程 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/docs/user/develop/basic/tool.zh.md">开发第一个 Tool ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/docs/user/develop/basic/config.zh.md">插件配置 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/docs/user/develop/basic/publish.zh.md">打包与 Profile ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/packages/boot/plugin-manager/README.zh.md">热更新与重启状态 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/packages/core/agent-loop/README.zh.md">默认 Agent Loop ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/docs/agent-lifecycle.zh.md">Turn / Step 时序 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/docs/subsystems/session.md">Session 事件 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/packages/core/tools/README.zh.md">工具执行与权限 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/packages/core/tool-executor-ptc/README.zh.md">PTC 执行器与 SDK ↗</a></div><a href="#top">回到课程总览 ↑</a></footer></div></div></main></div><script>const samples = new Map([
+  ['A001', { service: 'order-api', facts: [
+    ['M1', '指标', '20:00 后 HTTP 500 比例从 0.2% 升至约 7%。'],
+    ['L1', '日志', '失败请求报告等待数据库连接超时。'],
+    ['D1', '部署', '19:56 发布，连接池上限从 50 调低至 10。'],
+  ] }],
+  ['A002', { service: 'payment-api', facts: [
+    ['M2', '指标', '支付接口过去五分钟的 P95 延迟从 180 ms 升至 850 ms。'],
+  ] }],
 ])
 
-export function apply(ctx: Context) {
-  ctx.on(&#x27;session/event&#x27;, (session, event) =&gt; {
-    if (tracked.has(event.type)) {
-      console.log(session.id, event.seq, event.type)
-    }
-  })
-}</code></pre></div><p>例如，同一个会话下出现 <code>tool/call</code> 和 <code>tool/result</code> 两行，即可继续到会话记录中按调用 ID 查看配对详情。这里只打印元数据，保留调试所需线索。</p><h3>控制 · 为只读调查拒绝回滚</h3><div class="code"><div class="cap">TypeScript · rca-readonly.ts</div><pre tabindex="0"><code>import type { Context } from &#x27;@deepseek-ai/cordis&#x27;
-import type {} from &#x27;@deepseek-ai/dsh-tools&#x27;
-
-export const name = &#x27;rca-readonly&#x27;
-export const inject = [&#x27;tools&#x27;]
-
-export function apply(ctx: Context) {
-  ctx.on(&#x27;tools/pre-execute&#x27;, async (exec, next) =&gt; {
-    if (exec.name === &#x27;rollback_deployment&#x27;) {
-      return { kind: &#x27;deny&#x27;, reason: &#x27;本次调查只允许读取证据&#x27; }
-    }
-    return next()
-  })
-}</code></pre></div><p>查询工具调用 <code>next()</code> 继续交给后续处理器。回滚请求得到带原因的拒绝。此示例只演示命名工具的拦截；强制只读还需要最终的 <code>ctx.tools.guard()</code>、可用工具限制，以及外部服务签发的只读凭据。</p><div class="take"><h3>需求应该落在哪一层？</h3><p>增加查询能力，注册 Tool；复用客户端或缓存，提供 Service；记录耗时与失败，监听事件；调整指令，扩展 System Prompt。需要强制按“收集证据 → 验证 → 出报告”推进时，再考虑 Workflow 或自定义 Agent。</p></div></section><div id="sources"><footer><h2>对照源码</h2><p>讲义按 DeepSeek Harness 提交 <code>2e39e70</code> 核对。告警、查询工具与时间线均为教学示例。</p><div><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/packages/core/agent-loop/README.zh.md">Agent Loop 运行机制 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/docs/agent-lifecycle.zh.md">Turn 与 Step 的生命周期 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/docs/subsystems/session.md">Session 事件与恢复 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/packages/core/tools/README.zh.md">工具与权限流水线 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/packages/core/tool-executor-ptc/README.zh.md">PTC 执行器与 SDK ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/apps/cli/config/examples/ptc.yml">官方 PTC 配置示例 ↗</a></div></footer></div></div></main></div><script>const evidence = {
-  query_metrics: "20:00 后订单接口的 500 比例升高",
-  query_logs: "失败请求多次等待数据库连接超时",
-  get_deployments: "19:56 发布，连接池上限从 50 改为 10"
-};
-
-// 用固定决策代替模型，离线复现四个 Step。
-function decide(history) {
-  const calls = Object.keys(evidence);
-  const seen = history.filter(m => m.role === "tool");
-  const name = calls[seen.length];
-  if (name) return { id: "call-" + name, name };
-  return { text: "候选原因是连接池上限降低；还需核对连接占用与流量。" };
+function collectEvidence(id) {
+  const alertId = id.trim().toUpperCase()
+  const row = samples.get(alertId)
+  if (!row) return { alertId, found: false, facts: [] }
+  return { alertId, found: true, ...row }
 }
 
-function investigate() {
-  const history = [{ role: "user", text: "调查订单服务 500" }];
-  for (let step = 1; step <= 4; step++) {
-    const reply = decide(history);
-    history.push({ role: "assistant", ...reply });
-    if (!reply.name) return history;
-    history.push({ role: "tool", callId: reply.id,
-                   text: evidence[reply.name] });
+const fields = [
+  ['正常执行', 'A001 · order-api · firing。通过参数校验，execute 找到匹配记录，render 生成这条摘要。'],
+  ['输入类型错误', 'alertId 要求字符串；数字 123 在参数校验阶段被拒，业务查询没有运行。'],
+  ['业务校验错误', '空字符串通过字符串类型检查，但在 execute 中经 trim() 后为空，触发业务错误。'],
+  ['正常返回 · 查无记录', 'A999 是有效的字符串，查询成功，规范值的 found 为 false。'],
+]
+function selectButton(button, attribute) {
+  document.querySelectorAll('[' + attribute + ']').forEach(other => {
+    other.setAttribute('aria-pressed', String(other === button))
+  })
+}
+function element(tag, text) {
+  const item = document.createElement(tag)
+  item.textContent = text
+  return item
+}
+document.querySelectorAll('[data-arg]').forEach(button => {
+  button.onclick = () => {
+    selectButton(button, 'data-arg')
+    const [title, detail] = fields[Number(button.dataset.arg)]
+    document.querySelector('#arg-output').replaceChildren(element('b', title), element('p', detail))
   }
-  throw new Error("已达到本次演示的步数上限");
+})
+function renderReport(id) {
+  const data = collectEvidence(id)
+  const report = document.querySelector('#case-output')
+  report.replaceChildren(element('b', data.alertId + ' · ' + (data.service || '查无告警')))
+  if (!data.found) {
+    report.append(element('p', 'found: false。未取得调查对象，请核对告警编号。'))
+    return
+  }
+  const list = document.createElement('ul')
+  data.facts.forEach(([key, source, detail]) => list.append(element('li', '[' + key + '] ' + source + ' · ' + detail)))
+  report.append(list)
+  const hasDeploy = data.facts.some(([, source]) => source === '部署')
+  report.append(element('b','候选原因'), element('p',hasDeploy
+    ? '连接池上限调低可能造成排队。D1 早于 M1，L1 支持这个方向，但时间先后不足以确认因果。'
+    : '原因未定。M2 只能确认支付请求变慢，尚不能区分流量上升、慢查询或上游延迟。'),
+    element('b','待验证项'), element('p',hasDeploy
+    ? '对齐同一时间窗的活跃连接数、等待时长和请求量。若连接池未接近上限，应复查假设。'
+    : '取同一时窗的请求量、依赖延迟、慢查询和发布记录，再决定下一步。'))
 }
-document.querySelectorAll("[data-step]").forEach(button => {
-  button.addEventListener("click", () => {
-    document.querySelectorAll("[data-step]").forEach(other => {
-      const active = button === other;
-      other.setAttribute("aria-pressed", String(active));
-      document.getElementById("step"+other.dataset.step).hidden = !active;
-    });
-  });
-});
-document.querySelector("[data-step]").click();
-document.getElementById("run").onclick = () => {
-  const output = document.getElementById("result");
-  output.hidden = false;
-  output.textContent = investigate().map(m =>
-    m.role.padEnd(9) + " " + (m.text || m.name)
-  ).join("\n");
-};
-document.getElementById("n").oninput = e => {
-  document.getElementById("num").textContent = e.target.value;
-  document.getElementById("serial").textContent = Number(e.target.value)+1;
-};
+document.querySelectorAll('[data-case]').forEach(button => {
+  button.onclick = () => { selectButton(button,'data-case'); renderReport(button.dataset.case) }
+})
+renderReport('A001')
+document.getElementById('count').oninput = e => {
+  document.querySelector('#count-val').textContent = e.target.value
+  document.querySelector('#serial').textContent = Number(e.target.value) + 1
+}
+const chapters = [...document.querySelectorAll('.chapter')]
+const menu = document.getElementById('chap-select')
+menu.onchange = () => { location.hash = menu.value }
+const menuLinks = [...document.querySelectorAll('aside nav a')]
+let waiting = false
+function syncNav() {
+  const visible = chapters.filter(chapter => chapter.getBoundingClientRect().top < innerHeight * 0.33)
+  const atSources = document.querySelector('#sources').getBoundingClientRect().top < innerHeight * 0.5
+  const id = atSources ? 'sources' : visible.at(-1)?.id || 'top'
+  menu.value = id
+  for (const a of menuLinks) {
+    if (a.hash === '#' + id) a.setAttribute('aria-current', 'location')
+    else a.removeAttribute('aria-current')
+  }
+  waiting = false
+}
+window.addEventListener('scroll', () => {
+  if (!waiting) { waiting = true; requestAnimationFrame(syncNav) }
+}, { passive: true })
+syncNav()
+
 </script></body></html>
