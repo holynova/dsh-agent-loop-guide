@@ -1,0 +1,129 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="用一次订单告警理解 DeepSeek Harness 的 Agent Loop、会话事件和工具编排。"><title>读懂 Agent Loop · DeepSeek Harness</title><style>:root{--paper:#f8f7f1;--ink:#182b29;--muted:#52615c;--line:#c3cbc1;--accent:#a24223;--light:#e9ede5;--dark:#1c2b2b;--mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.75 "Inter","PingFang SC","Microsoft Yahei",sans-serif}a{color:inherit;text-underline-offset:4px}a:hover{color:var(--accent)}button,input,summary{cursor:pointer}button{font:inherit}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,pre:focus-visible{outline:3px solid #ce693d;outline-offset:3px}.wrap{max-width:1248px;margin:auto;padding:0 clamp(18px,5vw,76px)}.mast,.mast span,.screenhead,.monitor figcaption,.cap,.runbar{display:flex;align-items:center}.mast{height:70px;justify-content:space-between;border-bottom:1px solid var(--ink);font-weight:650}.mast span{gap:12px;letter-spacing:-.03em}.mast a{font-size:13px;text-decoration:none;letter-spacing:.03em}.logo{color:var(--paper);background:var(--ink);border-radius:3px;width:29px;height:29px;display:grid;place-items:center;font:700 25px/1 var(--mono)}.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:7%;align-items:center;padding:clamp(32px,5vw,76px) 0 42px}.kicker,.sectionhead>span,.steptabs small,.screenhead span,.monitor figcaption,.cap,.pair small,.question small,nav small,.journal small{font:600 12px/1.5 var(--mono);letter-spacing:.065em}.kicker,.sectionhead>span,nav small,.pair small{color:var(--accent)}h1{font-size:clamp(48px,6.3vw,86px);line-height:1.07;letter-spacing:-.07em;margin:18px 0 16px}h1 em{font-family:"Baskervville",Georgia,serif;font-weight:500;letter-spacing:-.065em}.hero p{max-width:36em;margin:0;color:var(--muted)}figure{margin:0}.monitor{background:var(--dark);color:#f6f6e8;border:1px solid #182425;border-radius:8px;padding:20px 20px 12px;box-shadow:6px 6px 0 #dee1d6}.screenhead{justify-content:space-between;margin-bottom:16px}.screenhead strong{font:600 19px var(--mono)}.screenhead span,.monitor figcaption{color:#c3cfc8}.monitor svg{width:100%;display:block}.monitor figcaption{border-top:1px solid #485653;margin-top:8px;padding-top:12px;font-size:11px}.monitor figcaption span:last-child{margin-left:auto}.dot{height:7px;width:7px;border-radius:50%;background:#ffa16f;margin-right:8px}nav{display:flex;flex-wrap:wrap;border-block:1px solid var(--line);gap:8px 24px;padding:14px 0}nav a{text-decoration:none;font-size:14px;font-weight:600}nav small{margin-right:6px;font-size:10px}.chapters{max-width:920px;margin:auto}section,footer{padding:50px 0 35px;border-bottom:1px solid var(--line)}.sectionhead{display:flex;gap:18px;align-items:baseline;margin-bottom:24px}.sectionhead>span{font-size:15px;flex:none}.sectionhead p{margin:10px 0 0;color:var(--muted)}h2{font-size:clamp(25px,3.3vw,39px);line-height:1.3;letter-spacing:-.045em;margin:0;font-weight:730}h3{font-size:21px;line-height:1.5;margin:27px 0 8px;letter-spacing:-.03em}p{margin:12px 0}small{color:var(--muted)}code,pre{font-family:var(--mono)}:not(pre)>code{font-size:.86em;overflow-wrap:anywhere}.question{padding:15px 19px;background:var(--light);border-left:3px solid #607a65;margin-bottom:18px}.question small,.journal small,.pair small{display:block;margin-bottom:6px}.steptabs{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}.steptabs button{background:#e6e8e0;text-align:left;padding:12px 17px;border:none;border-radius:3px;font-weight:650;color:var(--ink)}.steptabs small{display:block;font-size:10px;color:inherit}.steptabs button[aria-pressed=true]{background:var(--ink);color:white}.stepdetail,.turn{border:1px solid var(--line);padding:18px 20px}.stepdetail{margin-top:8px;background:#fcfcf7;min-height:172px}.stepdetail>div{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}.stepdetail code{color:var(--accent)}.stepdetail p:last-child{color:var(--muted);margin-bottom:0}.nest{padding:22px;background:#e9ede6;border:1px solid #a4b5a8;border-radius:4px}.nestlabel{font-family:var(--mono);font-weight:700;margin-bottom:14px}.nestlabel span{font:500 15px/1.6 sans-serif;margin-left:12px}.turn{margin:8px 0;background:#f7f8f1;padding:12px 16px}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chips i{font:500 14px/1.45 sans-serif;background:#e1e9df;padding:5px 12px}.nest figcaption,.return,.calc p,.runbar small{color:var(--muted);font-size:14px}.nest figcaption{margin:12px 0 0}dl{display:grid;grid-template-columns:minmax(155px,1fr) 3fr;gap:0;margin:18px 0 0}dt,dd{border-bottom:1px solid #d6dbd2;margin:0;padding:13px 4px}dt{font-weight:700}.flow{display:flex;align-items:center;justify-content:space-between;gap:10px}.flow span{background:var(--ink);color:white;padding:12px 6px;flex:1;text-align:center;border-radius:3px}.flow b{color:var(--accent)}.return{border-bottom:1px dashed #a6b3a5;padding:10px 0}table{border-collapse:collapse;width:100%;margin:18px 0}th,td{border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}thead th{font-size:14px;color:var(--muted)}tbody th{width:29%;color:#235b50}.code{color:#e3e9de;background:var(--dark);border-radius:5px;overflow:hidden;margin:16px 0}.cap{color:#a9cdc1;border-bottom:1px solid #475650;padding:9px 16px;font-size:12px}.code pre,#result{margin:0;padding:17px 20px;overflow:auto;line-height:1.65;font-size:14px;tab-size:2}.runbar{gap:14px}.runbar button{background:var(--ink);color:white;border:none;border-radius:4px;padding:8px 16px}.runbar button:hover{background:#285247}#result{margin-top:12px;background:var(--light);white-space:pre-wrap}.journal,.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}.journal{background:var(--light);padding:20px}.journal>div{padding:4px 12px}.journal>div+div{border-left:1px solid #a9b5a7}.journal code{color:#265e51}.journal p{margin:2px 0 8px}.pair article{background:#edede4;padding:22px;border-top:3px solid #718475}.pair article+article{background:#f2eae0;border-color:#b1633d}.pair h3,.take h3{margin:0}.pair p{margin-bottom:0}.calc{margin:20px 0;border:1px solid var(--line);padding:20px}.calc label{font-weight:650}.calc output{margin-left:8px;color:var(--accent)}input[type=range]{display:block;width:100%;accent-color:var(--accent);margin:14px 0 18px}.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.counts div{border-left:2px solid var(--line);padding-left:10px}.counts b,.counts span{display:block}.counts b{font:500 34px/1.1 Georgia,serif}.counts span{font-size:14px}.calc p{margin-bottom:0}details{margin-top:18px;border:1px solid var(--line);padding:14px 18px}summary{font-weight:650}.take{border-left:4px solid var(--accent);padding:8px 18px;margin:25px 0;background:#f1eee4}.take p{margin:6px 0}footer{border:0;padding-bottom:65px}footer h2{font-size:25px}footer p{color:var(--muted);font-size:15px}footer a{display:inline-block;margin:0 20px 8px 0;font-size:14px}
+@media(max-width:760px){body{font-size:16px}.hero{grid-template-columns:1fr;gap:24px;padding:28px 0}.hero h1 br{display:none}.hero h1 em{margin-left:.16em}.hero h1{font-size:clamp(40px,8vw,60px)}.monitor{max-width:520px;width:100%;padding:15px}.mast{height:54px}nav{gap:6px 16px}.sectionhead{gap:11px}section{padding:34px 0 26px}.pair{grid-template-columns:1fr}.steptabs button{padding:9px 6px;font-size:14px}.steptabs small{font-size:9px}.nest{padding:14px}.nestlabel span{display:block;margin:3px 0}.flow{gap:3px;font-size:13px}.flow span{padding:8px 2px}.return{font-size:13px}dl{grid-template-columns:1fr}dt{border:0;padding-bottom:0}dd{padding-top:2px}.journal{grid-template-columns:.9fr 1.1fr;gap:0;padding:12px 2px}.journal p{font-size:14px}td,th{padding:9px 5px}.code pre{font-size:13px;padding:14px}.calc{padding:14px}.counts{gap:4px}.counts span{font-size:12px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media print{body{font-size:10pt;background:white}.wrap{padding:0}.mast,.steptabs,.runbar,nav,.calc input{display:none}.hero{padding:12px 0;grid-template-columns:1fr 1fr}.hero h1{font-size:34pt}.hero br{display:none}section{padding:16px 0}.sectionhead{margin-bottom:10px}h2{font-size:20pt}.stepdetail[hidden]{display:block}.stepdetail{min-height:auto}.code pre{white-space:pre-wrap;font-size:9pt}.pair,.journal,.monitor,.code,.turn{break-inside:avoid}*{print-color-adjust:exact}}
+</style></head><body><div class="wrap"><header class="mast"><span><b class="logo">↳</b> DeepSeek Harness</span><a href="#sources">源码索引 ↗</a></header><main><div class="hero"><div><div class="kicker">运行机制 / 第五节</div><h1>读懂<br><em>Agent Loop</em></h1><p>从一条订单告警出发，看模型怎样取得证据，工具怎样返回结果，以及一次调查如何留下可恢复的记录。</p></div><figure class="monitor"><div class="screenhead"><strong>order-api</strong><span>HTTP 500 比例</span></div>
+<svg viewBox="0 0 480 200" role="img" aria-labelledby="charttitle"><title id="charttitle">模拟订单接口错误率曲线。19:56 发布，20:00 后从约 0.2% 上升到约 7%。</title>
+<g stroke="#3d4a4c" stroke-width="1"><path d="M38 37H461 M38 98H461 M38 159H461" fill="none"/></g>
+<g fill="#b8c5c2" font-size="12" font-family="monospace"><text x="4" y="41">8%</text><text x="4" y="102">4%</text><text x="4" y="163">0%</text><text x="36" y="189">19:50</text><text x="233" y="189">20:00</text><text x="425" y="189">20:10</text></g>
+<path d="M166 35 V160" stroke="#b9c8c2" stroke-dasharray="3 5"/><text x="105" y="23" fill="#d2ddd6" font-size="12">19:56 · 配置发布</text>
+<path d="M38 156L67 156 76 154 90 157 112 155 125 157 149 155 165 157 191 155 216 155 236 154 248 153 257 139 268 142 281 112 292 120 309 82 324 94 337 66 350 72 361 53 375 69 387 51 403 59 418 43 428 55 443 48 458 52L458 159H38Z" fill="#f99164" opacity=".10"/>
+<path d="M38 156L67 156 76 154 90 157 112 155 125 157 149 155 165 157 191 155 216 155 236 154 248 153 257 139 268 142 281 112 292 120 309 82 324 94 337 66 350 72 361 53 375 69 387 51 403 59 418 43 428 55 443 48 458 52" fill="none" stroke="#ffa16f" stroke-width="3" stroke-linejoin="round"/><circle cx="458" cy="52" r="5" fill="#ffad79"/></svg><figcaption><span class="dot"></span> 教学模拟数据 <span>19:50 — 20:10</span></figcaption></figure></div><nav aria-label="讲义目录"><a href="#trace"><small>01</small>调查现场</a><a href="#units"><small>02</small>三个尺度</a><a href="#runtime"><small>03</small>运行机制</a><a href="#history"><small>04</small>会话恢复</a><a href="#ptc"><small>05</small>工具编排</a><a href="#hooks"><small>06</small>扩展插件</a></nav><div class="chapters"><section id="trace"><header class="sectionhead"><span>01</span><div><h2>跟着一次告警走完循环</h2><p>从一个可回答的问题开始：20:00 后的订单失败，与哪项变化最相关？每次模型决策都以当时已经取得的证据为输入。</p></div></header><div class="question"><small>用户输入</small>「订单服务的 500 错误突然增多，帮我调查原因。」</div><div class="steptabs" aria-label="调查步骤"><button data-step="0" aria-pressed="true"><small>STEP 01</small>查指标</button><button data-step="1" aria-pressed="false"><small>STEP 02</small>读日志</button><button data-step="2" aria-pressed="false"><small>STEP 03</small>核对部署</button><button data-step="3" aria-pressed="false"><small>STEP 04</small>写结论</button></div><div aria-live="polite"><article class="stepdetail" id="step0"><div><b>先确定故障范围</b><code>query_metrics</code></div><p>订单接口的 HTTP 500 比例从 0.2% 升到约 7%，集中在 20:00 之后。</p><p><strong>判断依据</strong>　错误比例只说明用户受影响。下一步查同一时段的失败日志。</p></article><article class="stepdetail" id="step1"><div><b>寻找失败请求的共同点</b><code>query_logs</code></div><p>多条 500 日志都出现“等待数据库连接超时”。</p><p><strong>判断依据</strong>　等待连接可能由流量突增、慢查询或连接池变小引起。下一步检查最近的变更。</p></article><article class="stepdetail" id="step2"><div><b>把变化放回时间线上</b><code>get_deployments</code></div><p>19:56 发布的新配置把连接池上限从 50 降到了 10。</p><p><strong>判断依据</strong>　配置变更先于错误增长。还需要连接占用率和请求流量来验证因果关系。</p></article><article class="stepdetail" id="step3"><div><b>区分事实与待验证的假设</b><code>final response</code></div><p>首要假设是连接池上限降低，导致请求排队超时。记录支持证据，并列出仍需核验的指标。</p><p><strong>判断依据</strong>　本步没有工具调用，队列也没有待处理输入，本轮调查结束。用户追问会开启新的 Turn。</p></article></div><p>在这个例子里，模型作出四次决策，工具执行三次。最后一步只生成文字结论，也算一个 Step。</p></section><section id="units"><header class="sectionhead"><span>02</span><div><h2>Session、Turn、Step 怎么数？</h2><p>同一段调查可以从三个尺度观察。先确定统计对象，才知道耗时、失败率和模型用量该记在哪里。</p></div></header><figure class="nest"><div class="nestlabel">Session <span>订单服务故障调查 · 保留跨轮历史</span></div><div class="turn"><b>Turn 1</b>　调查本次告警<div class="chips"><i>查指标</i><i>读日志</i><i>核对部署</i><i>写结论</i></div></div><div class="turn"><b>Turn 2</b>　用户追问「当时流量也涨了吗？」<div class="chips"><i>查流量</i><i>补充结论</i></div></div><figcaption>每个浅色方块代表一个 Step。第二轮可以使用第一轮已经记录的证据。</figcaption></figure>
+<dl><dt>Session · 会话</dt><dd>把多轮交互关联到同一份历史。用它还原整次调查，并汇总跨轮用量。</dd><dt>Turn · 一轮处理</dt><dd>驱动器领取待处理输入后开展的一轮工作。适合衡量用户从提问到答复等了多久。若进入首个 Step 前输入被拒，本轮可以有零个 Step。</dd><dt>Step · 一次决策</dt><dd>覆盖一次模型决策及其引发的一批工具调用，也可能没有工具。失败的模型请求可以在同一 Step 内重试，所以精确的请求次数要看请求记录。</dd></dl></section><section id="runtime"><header class="sectionhead"><span>03</span><div><h2>谁负责推动下一步？</h2><p>在 DeepSeek Harness（DSH）里，模型提出下一步动作，宿主运行时负责执行、记录和收尾。</p></div></header><div class="flow"><span>组装上下文</span><b>→</b><span>请求模型</span><b>→</b><span>执行工具</span><b>→</b><span>追加结果</span></div><div class="return">↳ 带着更新后的历史进入下一步；无工具调用且无待处理工作时结束本轮。</div><table><thead><tr><th>服务</th><th>职责与作用</th></tr></thead><tbody><tr><th scope="row"><code>ctx.agents</code></th><td><b>创建或恢复 Agent</b><br>让后续追问回到已有的调查。</td></tr><tr><th scope="row"><code>ctx.agentLoop</code></th><td><b>驱动 Turn 与 Step</b><br>决定何时请求模型、执行工具、继续或收尾。</td></tr><tr><th scope="row"><code>ctx.systemPrompt</code></th><td><b>组装系统指令</b><br>结合当前可见工具与提示词，告诉模型有哪些能力可用。</td></tr><tr><th scope="row"><code>ctx.llm</code></th><td><b>与模型提供方通信</b><br>发送派生的消息历史，处理流式文本和工具调用。</td></tr><tr><th scope="row"><code>ctx.tools</code></th><td><b>解析、校验与执行工具</b><br>把调用交给执行器，应用权限策略，返回相关联的结果。</td></tr><tr><th scope="row"><code>ctx.sessions</code></th><td><b>维护会话与事件</b><br>保存输入、响应和工具结果，供下一步派生历史。</td></tr></tbody></table><h3>把循环缩到一个可以运行的例子</h3><p>下面的 JavaScript 同时模拟模型和三个只读工具。注意 <code>history.push</code> 的两处写入：先保存模型的决定，再用调用 ID 关联工具结果。真实模型会读取结果内容，自行决定下一步。</p><div class="code"><div class="cap">JavaScript · 离线教学模型</div><pre tabindex="0"><code>const evidence = {
+  query_metrics: &quot;20:00 后订单接口的 500 比例升高&quot;,
+  query_logs: &quot;失败请求多次等待数据库连接超时&quot;,
+  get_deployments: &quot;19:56 发布，连接池上限从 50 改为 10&quot;
+};
+
+// 用固定决策代替模型，离线复现四个 Step。
+function decide(history) {
+  const calls = Object.keys(evidence);
+  const seen = history.filter(m =&gt; m.role === &quot;tool&quot;);
+  const name = calls[seen.length];
+  if (name) return { id: &quot;call-&quot; + name, name };
+  return { text: &quot;候选原因是连接池上限降低；还需核对连接占用与流量。&quot; };
+}
+
+function investigate() {
+  const history = [{ role: &quot;user&quot;, text: &quot;调查订单服务 500&quot; }];
+  for (let step = 1; step &lt;= 4; step++) {
+    const reply = decide(history);
+    history.push({ role: &quot;assistant&quot;, ...reply });
+    if (!reply.name) return history;
+    history.push({ role: &quot;tool&quot;, callId: reply.id,
+                   text: evidence[reply.name] });
+  }
+  throw new Error(&quot;已达到本次演示的步数上限&quot;);
+}
+
+console.table(investigate())</code></pre></div><div class="runbar"><button id="run">运行示例 →</button><small>无网络请求</small></div><pre id="result" aria-live="polite" hidden></pre><h3>接入真实工具时，运行时还要处理什么？</h3><p>一次响应可能请求多个工具。该版本默认允许同批最多 10 个并发调用，<code>maxParallelToolCalls: 1</code> 可使其串行，要求独占的工具会形成执行屏障。用户取消时，运行时通过信号通知正在工作的组件退出，并保留已送达的文本。工具本身也要响应取消信号。</p></section><section id="history"><header class="sectionhead"><span>04</span><div><h2>进程退出后，还能恢复什么？</h2><p>DSH 将已接纳的事实追加到 Session Log，再从事件派生模型使用的消息历史。配置 JSONL 持久化后，重启进程可以重建已经保存的会话。</p></div></header><figure class="journal"><div><small>追加事件 · 节选</small><code>turn/start<br>step/start<br>assistant/message<br>tool/call<br>tool/result<br>step/end</code></div><div><small>从同一份记录读取</small><b>模型上下文</b><p>将相关消息与工具结果交给下一步。</p><b>调查轨迹</b><p>通过调用 ID 配对请求与结果，定位哪一步未完成。</p></div></figure><h3>“没有成功记录”能证明回滚失败吗？</h3><p>假设外部系统已完成回滚，而 Agent 在写入 <code>tool/result</code> 前崩溃。重放日志能恢复已知历史，此时外部操作的结果仍然未知。先用稳定的 <code>operationId</code> 查询外部状态，再决定是否重试。服务端也应以该 ID 去重，避免重复执行。</p></section><section id="ptc"><header class="sectionhead"><span>05</span><div><h2>Native 与 PTC 怎么选？</h2><p>共同的问题是查一批告警，告诉用户哪些仍在触发。两种方式的区别，主要在于中间结果由谁读取、筛选和汇总。</p></div></header><div class="pair"><article><small>NATIVE TOOL CALLING</small><h3>模型看结果，决定后续动作</h3><p>模型直接看到可用工具及参数结构。一次响应可以提出多个调用，再读取返回的结果。若下一步需要理解一段含糊的日志，这种方式便于模型逐步判断。</p></article><article><small>PROGRAMMATIC TOOL CALLING</small><h3>程序处理结果，模型读摘要</h3><p>模型看到 <code>run_code</code> 和动态生成的 TypeScript SDK。它可用循环、分支和过滤组合工具，只把选出的值交回模型。嵌套调用仍走工具执行与权限流程。</p></article></div>
+<div class="calc"><label for="n">模拟查询的告警数 <output id="num" for="n">10</output></label><input id="n" type="range" min="1" max="20" value="10"><div class="counts"><div><b id="serial">11</b><span>Native 逐个决策</span></div><div><b>2</b><span>Native 一批并发</span></div><div><b>2</b><span>PTC 一段程序</span></div></div><p>数字表示模型请求数。假设 ID 已知、每个告警查一次、全部成功，最后再请求一次模型写总结。逐个决策为 N + 1；另两者各用一次请求发起查询、一次总结。三种方式查询告警的次数均为 N。这是推演，不是性能实测。</p></div>
+<div class="code"><div class="cap">TypeScript · PTC 程序体</div><pre tabindex="0"><code>// run_code 内的示例。假设已注册 get_grafana_alert，
+// 其 SDK 返回 { id: string, status: string, service: string }。
+const ids = [&quot;A001&quot;, &quot;A002&quot;, &quot;A003&quot;];
+const alerts = await Promise.all(
+  ids.map(id =&gt; tools.get_grafana_alert({ id }))
+);
+const firing = alerts
+  .filter(alert =&gt; alert.status === &quot;firing&quot;)
+  .map(({ id, service }) =&gt; ({ id, service }));
+inspect(firing);</code></pre></div><p>若 A001 与 A003 正在触发，<code>inspect</code> 只输出这两条的编号和服务名。原始告警详情留在程序内。若必须逐条阅读详情才能决定下一步，或只查一条告警，生成和执行程序的额外开销也应计入。</p><details><summary>在 DSH 中切换执行器</summary><p>在同时声明这两个插件的基础组合中，把下面片段保存为 <code>ptc.patch.yml</code>。在已完成依赖安装和模型配置的 DSH 源码根目录运行 <code>pnpm dsh web --patch ./ptc.patch.yml</code>。如果 Web Agent 有自己的执行器，选用其 PTC 预设；最近作用域的执行器生效。</p><div class="code"><div class="cap">YAML · ptc.patch.yml</div><pre tabindex="0"><code>- id: tool-executor-native
+  disabled: true
+
+- id: tool-executor-ptc
+  disabled: false</code></pre></div><p>生产环境还应设置工具权限、执行超时和资源预算。</p></details></section><section id="hooks"><header class="sectionhead"><span>06</span><div><h2>观察执行，还是改变执行？</h2><p>两个插件的挂载点不同。事件监听器能告诉你发生过什么；执行前的 Hook 可以改变一次工具调用的去向。</p></div></header><h3>观察 · 给每条调查轨迹加上序号</h3><p>在同一 DSH 工作区的插件包中使用下列 TypeScript，声明对应依赖并通过 Cordis 加载。触发一次会用到工具的调查后，按会话 ID 过滤日志，即可看到每轮起止与工具活动。</p><div class="code"><div class="cap">TypeScript · loop-logger.ts</div><pre tabindex="0"><code>import type { Context } from &#x27;@deepseek-ai/cordis&#x27;
+import type {} from &#x27;@deepseek-ai/dsh-session&#x27;
+
+export const name = &#x27;loop-logger&#x27;
+export const inject = [&#x27;sessions&#x27;]
+const tracked = new Set([
+  &#x27;turn/start&#x27;, &#x27;step/start&#x27;, &#x27;tool/call&#x27;,
+  &#x27;tool/result&#x27;, &#x27;step/end&#x27;, &#x27;turn/end&#x27;,
+])
+
+export function apply(ctx: Context) {
+  ctx.on(&#x27;session/event&#x27;, (session, event) =&gt; {
+    if (tracked.has(event.type)) {
+      console.log(session.id, event.seq, event.type)
+    }
+  })
+}</code></pre></div><p>例如，同一个会话下出现 <code>tool/call</code> 和 <code>tool/result</code> 两行，即可继续到会话记录中按调用 ID 查看配对详情。这里只打印元数据，保留调试所需线索。</p><h3>控制 · 为只读调查拒绝回滚</h3><div class="code"><div class="cap">TypeScript · rca-readonly.ts</div><pre tabindex="0"><code>import type { Context } from &#x27;@deepseek-ai/cordis&#x27;
+import type {} from &#x27;@deepseek-ai/dsh-tools&#x27;
+
+export const name = &#x27;rca-readonly&#x27;
+export const inject = [&#x27;tools&#x27;]
+
+export function apply(ctx: Context) {
+  ctx.on(&#x27;tools/pre-execute&#x27;, async (exec, next) =&gt; {
+    if (exec.name === &#x27;rollback_deployment&#x27;) {
+      return { kind: &#x27;deny&#x27;, reason: &#x27;本次调查只允许读取证据&#x27; }
+    }
+    return next()
+  })
+}</code></pre></div><p>查询工具调用 <code>next()</code> 继续交给后续处理器。回滚请求得到带原因的拒绝。此示例只演示命名工具的拦截；强制只读还需要最终的 <code>ctx.tools.guard()</code>、可用工具限制，以及外部服务签发的只读凭据。</p><div class="take"><h3>需求应该落在哪一层？</h3><p>增加查询能力，注册 Tool；复用客户端或缓存，提供 Service；记录耗时与失败，监听事件；调整指令，扩展 System Prompt。需要强制按“收集证据 → 验证 → 出报告”推进时，再考虑 Workflow 或自定义 Agent。</p></div></section><div id="sources"><footer><h2>对照源码</h2><p>讲义按 DeepSeek Harness 提交 <code>2e39e70</code> 核对。告警、查询工具与时间线均为教学示例。</p><div><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/packages/core/agent-loop/README.zh.md">Agent Loop 运行机制 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/docs/agent-lifecycle.zh.md">Turn 与 Step 的生命周期 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/docs/subsystems/session.md">Session 事件与恢复 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/packages/core/tools/README.zh.md">工具与权限流水线 ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/packages/core/tool-executor-ptc/README.zh.md">PTC 执行器与 SDK ↗</a><a href="https://github.com/deepseek-ai/deepseek-harness/blob/2e39e70496aa02986ca6a820c5d497e816b69d7e/apps/cli/config/examples/ptc.yml">官方 PTC 配置示例 ↗</a></div></footer></div></div></main></div><script>const evidence = {
+  query_metrics: "20:00 后订单接口的 500 比例升高",
+  query_logs: "失败请求多次等待数据库连接超时",
+  get_deployments: "19:56 发布，连接池上限从 50 改为 10"
+};
+
+// 用固定决策代替模型，离线复现四个 Step。
+function decide(history) {
+  const calls = Object.keys(evidence);
+  const seen = history.filter(m => m.role === "tool");
+  const name = calls[seen.length];
+  if (name) return { id: "call-" + name, name };
+  return { text: "候选原因是连接池上限降低；还需核对连接占用与流量。" };
+}
+
+function investigate() {
+  const history = [{ role: "user", text: "调查订单服务 500" }];
+  for (let step = 1; step <= 4; step++) {
+    const reply = decide(history);
+    history.push({ role: "assistant", ...reply });
+    if (!reply.name) return history;
+    history.push({ role: "tool", callId: reply.id,
+                   text: evidence[reply.name] });
+  }
+  throw new Error("已达到本次演示的步数上限");
+}
+document.querySelectorAll("[data-step]").forEach(button => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("[data-step]").forEach(other => {
+      const active = button === other;
+      other.setAttribute("aria-pressed", String(active));
+      document.getElementById("step"+other.dataset.step).hidden = !active;
+    });
+  });
+});
+document.querySelector("[data-step]").click();
+document.getElementById("run").onclick = () => {
+  const output = document.getElementById("result");
+  output.hidden = false;
+  output.textContent = investigate().map(m =>
+    m.role.padEnd(9) + " " + (m.text || m.name)
+  ).join("\n");
+};
+document.getElementById("n").oninput = e => {
+  document.getElementById("num").textContent = e.target.value;
+  document.getElementById("serial").textContent = Number(e.target.value)+1;
+};
+</script></body></html>
